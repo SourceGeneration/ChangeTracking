@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>12</LangVersion>
+		<Nullable>enable</Nullable>
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<AnalyzerLanguage>cs</AnalyzerLanguage>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+		<Version>1.0.0-beta1.231216.1</Version>
+		<Authors>SourceGeneration</Authors>
+		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/SourceGeneration/States</PackageProjectUrl>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>./../../nupkg</PackageOutputPath>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<!--Package the generator in the analyzer directory of the nuget package-->
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\Sg.Extensions.CodeAnalysis.csproj" />
+	</ItemGroup>
+
+</Project>

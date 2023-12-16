@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>12</LangVersion>
+
+		<Version>1.0.0-beta1.231216.1</Version>
+		<Authors>SourceGeneration</Authors>
+		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/SourceGeneration/States</PackageProjectUrl>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\ChangeTracking\src\Sg.ChangeTracking\Sg.ChangeTracking.csproj" />
+		<ProjectReference Include="..\Sg.States.SourceGenerator\Sg.States.SourceGenerator.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+	</ItemGroup>
+
+</Project>
