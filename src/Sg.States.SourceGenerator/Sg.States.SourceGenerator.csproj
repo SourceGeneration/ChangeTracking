@@ -15,7 +15,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/SourceGeneration/States</PackageProjectUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageOutputPath>./../../nupkg</PackageOutputPath>
+		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
 
 	</PropertyGroup>
 
