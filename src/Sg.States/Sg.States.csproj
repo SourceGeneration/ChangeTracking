@@ -6,21 +6,22 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>12</LangVersion>
 
-		<Version>1.0.0-beta1.231216.1</Version>
+		<Version>1.0.0-beta1.231217.1</Version>
 		<Authors>SourceGeneration</Authors>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/SourceGeneration/States</PackageProjectUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
-
+		<PackageIcon>sg.png</PackageIcon>
 	</PropertyGroup>
-
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\ChangeTracking\src\Sg.ChangeTracking\Sg.ChangeTracking.csproj" />
-		<ProjectReference Include="..\Sg.States.SourceGenerator\Sg.States.SourceGenerator.csproj" />
+		<None Include=".\..\..\sg.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
-	
+
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
 	</ItemGroup>
@@ -30,5 +31,11 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
 	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Sg.ChangeTracking" Version="1.0.0-beta1.231217.1" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\Sg.States.SourceGenerator\Sg.States.SourceGenerator.csproj" />
+	</ItemGroup>
 </Project>

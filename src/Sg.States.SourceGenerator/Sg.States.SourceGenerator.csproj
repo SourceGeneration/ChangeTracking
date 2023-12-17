@@ -9,17 +9,30 @@
 		<AnalyzerLanguage>cs</AnalyzerLanguage>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
-		<Version>1.0.0-beta1.231216.1</Version>
+		<Version>1.0.0-beta1.231217.1</Version>
 		<Authors>SourceGeneration</Authors>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/SourceGeneration/States</PackageProjectUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
-
+		<PackageIcon>sg.png</PackageIcon>
 	</PropertyGroup>
+	<ItemGroup>
+		<None Include=".\..\..\sg.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<!--<ItemGroup>
+	  <Compile Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\CSharpCodeBuilder.cs" Link="Extensions\CSharpCodeBuilder.cs" />
+	  <Compile Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\SymbolExtensions.cs" Link="Extensions\SymbolExtensions.cs" />
+	  <Compile Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\SyntaxExtensions.cs" Link="Extensions\SyntaxExtensions.cs" />
+	</ItemGroup>-->
 
 	<ItemGroup>
+		<PackageReference Include="Sg.Extensions.CodeAnalysis" Version="1.0.0-beta1.231216.2" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
@@ -27,11 +40,6 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<!--Package the generator in the analyzer directory of the nuget package-->
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\Sg.Extensions.CodeAnalysis.csproj" />
-	</ItemGroup>
-
 </Project>
