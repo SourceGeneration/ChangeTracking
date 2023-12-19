@@ -1,4 +1,4 @@
-﻿namespace Sg.States;
+﻿namespace SourceGeneration.States;
 
 public interface IState : IDisposable
 {

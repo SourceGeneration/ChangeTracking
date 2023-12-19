@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Sg.States.SourceGenerator;
+namespace SourceGeneration.States.SourceGenerator;
 
 [Generator(LanguageNames.CSharp)]
 public class StateInjectionSourceGenerator : IIncrementalGenerator
 {
-    public const string StateAttribute = "Sg.States.StateAttribute";
+    public const string RootNamespace = "SourceGeneration.States";
+    public const string StateAttribute = $"{RootNamespace}.StateAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -61,7 +62,7 @@ public class StateInjectionSourceGenerator : IIncrementalGenerator
                     }
                 });
             });
-            sourceContext.AddSource($"Sg.States.___StateInitializer.g.cs", builder.ToString());
+            sourceContext.AddSource($"{RootNamespace}.___StateInitializer.g.cs", builder.ToString());
 
         });
     }
@@ -77,6 +78,6 @@ public class StateInjectionSourceGenerator : IIncrementalGenerator
 
         var ns = stateModel.GetNamespace();
 
-        return $"global::Sg.States.StateRegister.Add<{ns}.{stateModel.Name}>();";
+        return $"global::{RootNamespace}.StateRegister.Add<{ns}.{stateModel.Name}>();";
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Sg.Rx;
+﻿namespace SourceGeneration.Rx;
 
 internal class SelectSubject<TSource, TResult> : BehaviorSubject<TResult>
 {

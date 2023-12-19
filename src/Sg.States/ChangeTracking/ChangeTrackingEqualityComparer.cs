@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Sg.States;
+namespace SourceGeneration.States;
 
 public sealed class ChangeTrackingEqualityComparer : IEqualityComparer<object>
 {

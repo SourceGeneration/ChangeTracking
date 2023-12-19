@@ -1,10 +1,10 @@
-﻿using Sg.ChangeTracking;
-using Sg.Rx;
+﻿using SourceGeneration.States;
+using SourceGeneration.Rx;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Runtime.ExceptionServices;
 
-namespace Sg.States;
+namespace SourceGeneration.States;
 
 public class State<TState> : IState<TState>, IStore<TState>
 {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Sg.ChangeTracking;
+using SourceGeneration.States;
 using System.ComponentModel;
 
-namespace Sg.States;
+namespace SourceGeneration.States;
 
 [EditorBrowsable(EditorBrowsableState.Never)]
 public static class StateRegister

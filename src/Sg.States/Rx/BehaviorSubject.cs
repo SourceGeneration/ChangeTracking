@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 
-namespace Sg.Rx;
+namespace SourceGeneration.Rx;
 
 internal class BehaviorSubject<T>(T value) : IObserver<T>, IObservable<T>, IDisposable
 {

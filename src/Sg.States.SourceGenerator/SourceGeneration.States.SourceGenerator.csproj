@@ -9,8 +9,9 @@
 		<AnalyzerLanguage>cs</AnalyzerLanguage>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
-		<Version>1.0.0-beta1.231217.1</Version>
+		<Version>1.0.0-beta1.231219.1</Version>
 		<Authors>SourceGeneration</Authors>
+		<Description>State management framework with Rx</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/SourceGeneration/States</PackageProjectUrl>
@@ -24,15 +25,8 @@
 			<PackagePath>\</PackagePath>
 		</None>
 	</ItemGroup>
-
-	<!--<ItemGroup>
-	  <Compile Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\CSharpCodeBuilder.cs" Link="Extensions\CSharpCodeBuilder.cs" />
-	  <Compile Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\SymbolExtensions.cs" Link="Extensions\SymbolExtensions.cs" />
-	  <Compile Include="..\..\..\Extensions.CodeAnalysis\src\Sg.Extensions.CodeAnalysis\SyntaxExtensions.cs" Link="Extensions\SyntaxExtensions.cs" />
-	</ItemGroup>-->
-
 	<ItemGroup>
-		<PackageReference Include="Sg.Extensions.CodeAnalysis" Version="1.0.0-beta1.231216.2" />
+		<PackageReference Include="SourceGeneration.Extensions.CodeAnalysis" Version="1.0.0-beta1.231219.1" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>

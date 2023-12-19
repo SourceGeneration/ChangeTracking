@@ -1,6 +1,6 @@
 ﻿using System.Runtime.ExceptionServices;
 
-namespace Sg.Rx;
+namespace SourceGeneration.Rx;
 
 internal static partial class ObservableExtensions
 {

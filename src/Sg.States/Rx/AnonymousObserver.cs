@@ -1,4 +1,4 @@
-﻿namespace Sg.Rx;
+﻿namespace SourceGeneration.Rx;
 
 internal sealed class AnonymousObserver<T>(Action<T> onNext, Action<Exception> onError, Action onCompleted) : IObserver<T>
 {

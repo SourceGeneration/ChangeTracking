@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Sg.ChangeTracking;
 
-namespace Sg.States;
+namespace SourceGeneration.States;
 
 public static class SgStateServiceCollectionExtensions
 {
