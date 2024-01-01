@@ -5,12 +5,11 @@ namespace SourceGeneration.States;
 
 public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking, INotifyCollectionChanged, INotifyPropertyChanged
 {
-    protected bool _itemChanged;
+    protected bool _cascadingChanged;
     protected bool _baseChanged;
 
-    public bool IsChanged => _itemChanged || _baseChanged;
-    public bool IsItemChanged => _itemChanged;
-    public bool IsBaseChanged => _baseChanged;
+    public bool IsChanged => _cascadingChanged || _baseChanged;
+    public bool IsCascadingChanged => _cascadingChanged;
 
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -19,13 +18,13 @@ public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking
 
     protected void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
-        _itemChanged = true;
+        _cascadingChanged = true;
         PropertyChanged?.Invoke(sender, args);
     }
 
     protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
     {
-        _itemChanged = true;
+        _cascadingChanged = true;
         CollectionChanged?.Invoke(sender, args);
     }
 

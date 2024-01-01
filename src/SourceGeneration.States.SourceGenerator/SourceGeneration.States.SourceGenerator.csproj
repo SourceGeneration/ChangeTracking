@@ -9,7 +9,7 @@
 		<AnalyzerLanguage>cs</AnalyzerLanguage>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
-		<Version>1.0.0-beta1.231219.1</Version>
+		<Version>1.0.0-beta1.240101.1</Version>
 		<Authors>SourceGeneration</Authors>
 		<Description>State management framework with Rx</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
@@ -26,7 +26,7 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="SourceGeneration.Extensions.CodeAnalysis" Version="1.0.0-beta1.231219.1" />
+		<PackageReference Include="SourceGeneration.Extensions.CodeAnalysis" Version="1.0.0-beta1.231227.1" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>

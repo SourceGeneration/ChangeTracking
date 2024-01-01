@@ -118,9 +118,9 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
     {
         _baseChanged = false;
 
-        if (_itemChanged)
+        if (_cascadingChanged)
         {
-            _itemChanged = false;
+            _cascadingChanged = false;
 
             foreach (var item in _dictionary.Values)
             {

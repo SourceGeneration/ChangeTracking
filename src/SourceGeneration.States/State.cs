@@ -311,7 +311,7 @@ public class State<TState> : IState<TState>, IStore<TState>
             {
                 if (value is ICascadingChangeTracking cascading)
                 {
-                    _changed = cascading.IsBaseChanged;
+                    _changed = cascading.IsChanged && !cascading.IsCascadingChanged;
 
                     if (_changed)
                     {

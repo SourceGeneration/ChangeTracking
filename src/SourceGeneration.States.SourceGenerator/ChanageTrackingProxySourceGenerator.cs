@@ -12,12 +12,12 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 {
     public const string RootNamespace = "SourceGeneration.States";
 
-    public const string StateAttribute = $"{RootNamespace}.ChangeTrackingAttribute";
+    public const string ChangeTrackingAttribute = $"{RootNamespace}.ChangeTrackingAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var methodDeclarations = context.SyntaxProvider.ForAttributeWithMetadataName(
-            StateAttribute,
+            ChangeTrackingAttribute,
             predicate: static (node, token) =>
             {
                 if (node is not TypeDeclarationSyntax type
@@ -76,8 +76,8 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             var typeProxy = CreateProxy(typeSymbol, cancellationToken);
 
-            if (typeProxy.Properties.Count == 0)
-                return;
+            //if (typeProxy.Properties.Count == 0)
+            //    return;
 
             var root = (CompilationUnitSyntax)type.SyntaxTree.GetRoot();
 
@@ -123,13 +123,12 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             });
             builder.AppendLine();
 
-            builder.AppendLine("private bool __itemChanged;");
+            builder.AppendLine("private bool __cascadingChanged;");
             builder.AppendLine("private bool __baseChanged;");
             builder.AppendLine();
 
-            builder.AppendLine("public bool IsChanged => __baseChanged || __itemChanged;");
-            builder.AppendLine("public bool IsItemChanged => __itemChanged;");
-            builder.AppendLine("public bool IsBaseChanged => __baseChanged;");
+            builder.AppendLine("public bool IsChanged => __baseChanged || __cascadingChanged;");
+            builder.AppendLine("public bool IsCascadingChanged => __cascadingChanged;");
             builder.AppendLine("public event global::System.ComponentModel.PropertyChangedEventHandler PropertyChanged;");
             builder.AppendLine("public event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;");
             builder.AppendLine();
@@ -151,13 +150,13 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             builder.AppendLine();
             builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
             {
-                builder.AppendLine("this.__itemChanged = true;");
+                builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("this.PropertyChanged?.Invoke(sender, e);");
             });
             builder.AppendLine();
-            builder.AppendBlock("private void OnCollectionChanged(object? sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
+            builder.AppendBlock("private void OnCollectionChanged(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
             {
-                builder.AppendLine("this.__itemChanged = true;");
+                builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("CollectionChanged?.Invoke(sender, e);");
             });
             builder.AppendLine();
@@ -165,9 +164,9 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             builder.AppendBlock($"public void AcceptChanges()", () =>
             {
                 builder.AppendLine("this.__baseChanged = false;");
-                builder.AppendBlock("if (__itemChanged)", () =>
+                builder.AppendBlock("if (__cascadingChanged)", () =>
                 {
-                    builder.AppendLine("this.__itemChanged = false;");
+                    builder.AppendLine("this.__cascadingChanged = false;");
                     foreach (var property in typeProxy.Properties.Where(x => x.ChangeTracking))
                     {
                         builder.AppendLine($"((global::System.ComponentModel.IChangeTracking)this.{property.PropertyName})?.AcceptChanges();");
@@ -197,7 +196,10 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                                 {
                                     if (property.NotifyPropertyChanged)
                                     {
-                                        builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged -= OnPropertyChanged;");
+                                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged)", () =>
+                                        {
+                                            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged -= OnPropertyChanged;");
+                                        });
                                     }
                                     if (property.NotifyCollectionChanged)
                                     {
@@ -211,24 +213,17 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                                 });
                                 builder.AppendBlock("else", () =>
                                 {
-                                    if (property.ChangeTracking)
+                                    if (property.Kind == TypeProxyKind.Collection)
                                     {
-                                        builder.AppendLine($"base.{property.PropertyName} = value;");
+                                        builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
+                                    }
+                                    else if (property.Kind == TypeProxyKind.Dictionary)
+                                    {
+                                        builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
                                     }
                                     else
                                     {
-                                        if (property.Kind == TypeProxyKind.Collection)
-                                        {
-                                            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
-                                        }
-                                        else if (property.Kind == TypeProxyKind.Dictionary)
-                                        {
-                                            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
-                                        }
-                                        else
-                                        {
-                                            builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
-                                        }
+                                        builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
                                     }
 
                                     if (property.NotifyPropertyChanged)
@@ -319,40 +314,34 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             bool notifyCollectionChanged = false;
             bool changeTracking = false;
 
-            if (type.HasAttribute(StateAttribute))
+            foreach (var @interface in type.AllInterfaces)
             {
-                changeTracking = true;
-                notifyPropertyChanged = true;
-            }
-            else
-            {
-                foreach (var @interface in type.AllInterfaces)
+                var fullName = @interface.GetFullName();
+
+                if (fullName == "global::System.ComponentModel.INotifyPropertyChanged")
                 {
-                    var fullName = @interface.GetFullName();
-
-                    if (fullName == "global::System.ComponentModel.INotifyPropertyChanged")
-                    {
-                        notifyPropertyChanged = true;
-                    }
-                    else if (fullName == "global::System.Collections.Specialized.INotifyCollectionChanged")
-                    {
-                        notifyCollectionChanged = true;
-                    }
-                    else if (fullName == "global::System.ComponentModel.IChangeTracking")
-                    {
-                        changeTracking = true;
-                    }
-
-                    if (notifyPropertyChanged && notifyCollectionChanged && changeTracking)
-                        break;
+                    notifyPropertyChanged = true;
                 }
+                else if (fullName == "global::System.Collections.Specialized.INotifyCollectionChanged")
+                {
+                    notifyCollectionChanged = true;
+                }
+                else if (fullName == "global::System.ComponentModel.IChangeTracking")
+                {
+                    changeTracking = true;
+                }
+
+                if (notifyPropertyChanged && notifyCollectionChanged)
+                    break;
             }
+
+            var proxiable = type.HasAttribute(ChangeTrackingAttribute);
 
             return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsRequired)
             {
                 NotifyCollectionChanged = notifyCollectionChanged,
-                NotifyPropertyChanged = notifyPropertyChanged,
-                ChangeTracking = changeTracking,
+                NotifyPropertyChanged = notifyPropertyChanged || proxiable,
+                ChangeTracking = changeTracking || proxiable,
             };
         }
     }
@@ -379,6 +368,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
         public bool NotifyPropertyChanged;
         public bool NotifyCollectionChanged;
         public bool ChangeTracking;
+
     }
 
     private enum TypeProxyKind

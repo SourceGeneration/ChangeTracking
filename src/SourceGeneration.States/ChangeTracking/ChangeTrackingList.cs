@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -97,9 +96,9 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
     {
         _baseChanged = false;
 
-        if (_itemChanged)
+        if (_cascadingChanged)
         {
-            _itemChanged = false;
+            _cascadingChanged = false;
 
             foreach (var item in _list)
             {
