@@ -137,7 +137,14 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             {
                 foreach (var property in typeProxy.Properties.Where(x => !x.Required))
                 {
-                    builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
+                    if (property.IsVirtual)
+                    {
+                        builder.AppendLine($"this.__Set__{property.PropertyName}(source.{property.PropertyName});");
+                    }
+                    else
+                    {
+                        builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
+                    }
                 }
             });
             builder.AppendLine();
@@ -186,63 +193,75 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                     {
                         builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(base.{property.PropertyName}, value))", () =>
                         {
-                            if (property.Kind == TypeProxyKind.Value)
-                            {
-                                builder.AppendLine($"base.{property.PropertyName} = value;");
-                            }
-                            else
-                            {
-                                builder.AppendBlock($"if (base.{property.PropertyName} is not null)", () =>
-                                {
-                                    if (property.NotifyPropertyChanged)
-                                    {
-                                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged)", () =>
-                                        {
-                                            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged -= OnPropertyChanged;");
-                                        });
-                                    }
-                                    if (property.NotifyCollectionChanged)
-                                    {
-                                        builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged -= OnCollectionChanged;");
-                                    }
-                                });
-                                builder.AppendLine();
-                                builder.AppendBlock("if (value is null)", () =>
-                                {
-                                    builder.AppendLine($"base.{property.PropertyName} = null;");
-                                });
-                                builder.AppendBlock("else", () =>
-                                {
-                                    if (property.Kind == TypeProxyKind.Collection)
-                                    {
-                                        builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
-                                    }
-                                    else if (property.Kind == TypeProxyKind.Dictionary)
-                                    {
-                                        builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
-                                    }
-                                    else
-                                    {
-                                        builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
-                                    }
-
-                                    if (property.NotifyPropertyChanged)
-                                    {
-                                        builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged += OnPropertyChanged;");
-                                    }
-                                    if (property.NotifyCollectionChanged)
-                                    {
-                                        builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged += OnCollectionChanged;");
-                                    }
-                                });
-                                builder.AppendLine();
-                            }
+                            builder.AppendLine($"this.__Set__{property.PropertyName}(value);");
                             builder.AppendLine($"this.OnPropertyChanged(\"{property.PropertyName}\");");
                         });
                     });
                 });
                 builder.AppendLine();
             }
+
+            foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
+            {
+                builder.AppendBlock($"private void __Set__{property.PropertyName}({property.Type} value)", () =>
+                {
+                    if (property.Kind == TypeProxyKind.Value)
+                    {
+                        builder.AppendLine($"base.{property.PropertyName} = value;");
+                    }
+                    else
+                    {
+                        builder.AppendBlock($"if (base.{property.PropertyName} is not null)", () =>
+                        {
+                            if (property.NotifyPropertyChanged)
+                            {
+                                builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged __propertyChanged__)", () =>
+                                {
+                                    builder.AppendLine("__propertyChanged__.PropertyChanged -= OnPropertyChanged;");
+                                });
+                            }
+                            if (property.NotifyCollectionChanged)
+                            {
+                                builder.AppendBlock($"if (base.{property.PropertyName} is global::System.Collections.Specialized.INotifyCollectionChanged __collectionChanged__)", () =>
+                                {
+                                    builder.AppendLine("__collectionChanged__.CollectionChanged -= OnCollectionChanged;");
+                                });
+                            }
+                        });
+                        builder.AppendLine();
+                        builder.AppendBlock("if (value is null)", () =>
+                        {
+                            builder.AppendLine($"base.{property.PropertyName} = null;");
+                        });
+                        builder.AppendBlock("else", () =>
+                        {
+                            if (property.Kind == TypeProxyKind.Collection)
+                            {
+                                builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
+                            }
+                            else if (property.Kind == TypeProxyKind.Dictionary)
+                            {
+                                builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
+                            }
+                            else
+                            {
+                                builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
+                            }
+
+                            if (property.NotifyPropertyChanged)
+                            {
+                                builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged += OnPropertyChanged;");
+                            }
+                            if (property.NotifyCollectionChanged)
+                            {
+                                builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged += OnCollectionChanged;");
+                            }
+                        });
+                        builder.AppendLine();
+                    }
+                });
+            }
+
         });
     }
 
@@ -288,7 +307,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             {
                 var definition = type.OriginalDefinition.GetFullName();
 
-                if (definition == "global::System.Collections.Generic.IDictionary<T,K>")
+                if (definition == "global::System.Collections.Generic.IDictionary<TKey, TValue>")
                 {
                     return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsVirtual, property.IsRequired)
                     {
@@ -299,7 +318,9 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                         ChangeTracking = true,
                     };
                 }
-                else if (definition == "global::System.Collections.Generic.IList<T>")
+                else if (definition == "global::System.Collections.Generic.IList<T>" ||
+                         definition == "global::System.Collections.Generic.ICollection<T>" ||
+                         definition == "global::System.Collections.Generic.IEnumerable<T>")
                 {
                     return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsVirtual, property.IsRequired)
                     {

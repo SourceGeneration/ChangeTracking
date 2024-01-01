@@ -121,6 +121,4 @@ public class NotTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.NotTrackingProperty).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.NotTrackingProperty).IsCascadingChanged);
     }
-
-
 }

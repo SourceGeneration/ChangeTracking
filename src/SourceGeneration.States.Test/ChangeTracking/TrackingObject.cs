@@ -8,6 +8,18 @@ public class TrackingObject
 
     public virtual TrackingObject? CascadingObject { get; set; }
 
+    public virtual IList<int> IListOfValue { get; set; } = [];
+    public virtual IList<TrackingObject> IListOfObject { get; set; } = [];
+
+    public virtual IEnumerable<int> IEnumerableOfValue { get; set; } = [];
+    public virtual IEnumerable<TrackingObject> IEnumerableOfObject { get; set; } = [];
+
+    public virtual ICollection<int> ICollectionOfValue { get; set; } = [];
+    public virtual ICollection<TrackingObject> ICollectionOfObject { get; set; } = [];
+
+    public virtual IDictionary<int, int> IDictionaryOfValue { get; set; } = new Dictionary<int, int>();
+    public virtual IDictionary<int, TrackingObject> IDictionaryOfObject { get; set; } = new Dictionary<int, TrackingObject>();
+
     public virtual ChangeTrackingList<int> TrackingValueList { get; set; } = [];
     public virtual ChangeTrackingList<TrackingObject> TrackingObjectList { get; set; } = [];
 

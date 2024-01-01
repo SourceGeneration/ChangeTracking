@@ -76,6 +76,33 @@ public class DictionaryChangeTrackingTest
     }
 
     [TestMethod]
+    public void ValueList_Clear()
+    {
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        {
+            TrackingValueDictionary = new ChangeTrackingDictionary<int, int>
+            {
+                { 1, 1 },
+            }
+        });
+
+        Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
+
+        tracking.TrackingValueDictionary.Clear();
+        Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingValueDictionary).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueDictionary).IsCascadingChanged);
+
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
+        Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueDictionary).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueDictionary).IsCascadingChanged);
+    }
+
+    [TestMethod]
     public void ObjectDictionary_ItemChanged()
     {
         var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()

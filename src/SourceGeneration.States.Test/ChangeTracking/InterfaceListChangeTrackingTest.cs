@@ -1,7 +1,7 @@
 ﻿namespace SourceGeneration.States.Test.ChangeTracking;
 
 [TestClass]
-public class ListChangeTrackingTest
+public class InterfaceListChangeTrackingTest
 {
     [TestMethod]
     public void ValueList_Add()
@@ -11,17 +11,17 @@ public class ListChangeTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        tracking.TrackingValueList.Add(1);
+        tracking.IListOfValue.Add(1);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
 
         ((ICascadingChangeTracking)tracking).AcceptChanges();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
     }
 
     [TestMethod]
@@ -29,23 +29,23 @@ public class ListChangeTrackingTest
     {
         var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
         {
-            TrackingValueList = [1]
+            IListOfValue = [1]
         });
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        tracking.TrackingValueList.RemoveAt(0);
+        tracking.IListOfValue.RemoveAt(0);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
 
         ((ICascadingChangeTracking)tracking).AcceptChanges();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
     }
 
     [TestMethod]
@@ -53,23 +53,23 @@ public class ListChangeTrackingTest
     {
         var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
         {
-            TrackingValueList = [1]
+            IListOfValue = [1]
         });
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        tracking.TrackingValueList.Clear();
+        tracking.IListOfValue.Clear();
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
 
         ((ICascadingChangeTracking)tracking).AcceptChanges();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
     }
 
     [TestMethod]
@@ -77,23 +77,23 @@ public class ListChangeTrackingTest
     {
         var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
         {
-            TrackingValueList = [1]
+            IListOfValue = [1]
         });
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        tracking.TrackingValueList[0] = 2;
+        tracking.IListOfValue[0] = 2;
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
 
         ((ICascadingChangeTracking)tracking).AcceptChanges();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingValueList).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfValue).IsCascadingChanged);
     }
 
     [TestMethod]
@@ -101,39 +101,38 @@ public class ListChangeTrackingTest
     {
         var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
         {
-            TrackingObjectList = [new TrackingObject(), new TrackingObject()]
+            IListOfObject = [new TrackingObject(), new TrackingObject()]
         });
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        tracking.TrackingObjectList[0].IntProperty = 1;
+        tracking.IListOfObject[0].IntProperty = 1;
 
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingObjectList).IsChanged);
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingObjectList).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfObject).IsChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfObject).IsCascadingChanged);
 
-        Assert.IsTrue(((ICascadingChangeTracking)tracking.TrackingObjectList[0]).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[0]).IsCascadingChanged);
+        Assert.IsTrue(((ICascadingChangeTracking)tracking.IListOfObject[0]).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[0]).IsCascadingChanged);
 
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[1]).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[1]).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[1]).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[1]).IsCascadingChanged);
 
         ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject).IsCascadingChanged);
 
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[0]).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[0]).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[0]).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[0]).IsCascadingChanged);
 
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[1]).IsChanged);
-        Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectList[1]).IsCascadingChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[1]).IsChanged);
+        Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[1]).IsCascadingChanged);
     }
-
 }
