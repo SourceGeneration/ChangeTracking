@@ -175,7 +175,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             });
             builder.AppendLine();
 
-            foreach (var property in typeProxy.Properties)
+            foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
             {
                 var required = property.Required ? "required " : string.Empty;
                 builder.AppendBlock($"public override {required}{property.Type} {property.PropertyName}", () =>
@@ -248,7 +248,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
     private static TypeDefinition CreateProxy(INamedTypeSymbol type, CancellationToken cancellationToken)
     {
-        var properties = type.GetMembers().OfType<IPropertySymbol>().Where(x => !x.IsReadOnly && !x.IsStatic && x.IsVirtual && !x.IsWriteOnly);
+        var properties = type.GetMembers().OfType<IPropertySymbol>().Where(x => !x.IsReadOnly && !x.IsStatic && !x.IsWriteOnly);
 
         TypeDefinition typeProxy = new(type.Name, type.GetNamespace(), type.IsRecord);
 
@@ -274,13 +274,14 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             var type = property.Type;
             var typeName = property.Type.GetFullName();
             var propertyName = property.Name;
+
             if (type.IsValueType ||
-            type.TypeKind == TypeKind.Struct ||
+                type.TypeKind == TypeKind.Struct ||
                 type.TypeKind == TypeKind.Enum ||
                 type.IsTupleType ||
                 typeName == "string")
             {
-                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsRequired);
+                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsVirtual, property.IsRequired);
             }
 
             if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
@@ -289,7 +290,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
                 if (definition == "global::System.Collections.Generic.IDictionary<T,K>")
                 {
-                    return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsRequired)
+                    return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsVirtual, property.IsRequired)
                     {
                         KeyType = namedType.TypeArguments[0].GetFullName(),
                         ElementType = namedType.TypeArguments[1].GetFullName(),
@@ -300,7 +301,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 }
                 else if (definition == "global::System.Collections.Generic.IList<T>")
                 {
-                    return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsRequired)
+                    return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsVirtual, property.IsRequired)
                     {
                         ElementType = namedType.TypeArguments[0].GetFullName(),
                         NotifyCollectionChanged = true,
@@ -337,7 +338,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             var proxiable = type.HasAttribute(ChangeTrackingAttribute);
 
-            return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsRequired)
+            return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
             {
                 NotifyCollectionChanged = notifyCollectionChanged,
                 NotifyPropertyChanged = notifyPropertyChanged || proxiable,
@@ -355,12 +356,13 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
         public readonly List<PropertyDefinition> Properties = [];
     }
 
-    private sealed class PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type, bool required)
+    private sealed class PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type, bool isVirtual, bool required)
     {
         public readonly string PropertyName = propertyName;
         public readonly string Type = type;
         public readonly TypeProxyKind Kind = proxyKind;
         public readonly bool Required = required;
+        public readonly bool IsVirtual = isVirtual;
 
         public string? KeyType;
         public string? ElementType;

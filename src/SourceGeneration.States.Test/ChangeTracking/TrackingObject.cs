@@ -16,11 +16,21 @@ public class TrackingObject
 
     public virtual NotTrackingObject NotTracking { get; set; } = new();
     public virtual CascadingTrackingObject CascadingTracking { get; set; } = new();
+    public virtual NotTrackingPropertyObject NotTrackingProperty { get; set; } = new();
+
+    public int ReadOnlyProperty { get; } = 1;
+    public virtual int ReadOnlyVirtualProperty { get; } = 1;
 }
 
 public class NotTrackingObject
 {
     public virtual int Value { get; set; }
+}
+
+[ChangeTracking]
+public class NotTrackingPropertyObject
+{
+    public int Value { get; set; }
 }
 
 [ChangeTracking]

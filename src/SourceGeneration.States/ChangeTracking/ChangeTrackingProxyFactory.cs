@@ -2,6 +2,7 @@
 
 namespace SourceGeneration.States;
 
+[EditorBrowsable(EditorBrowsableState.Never)]
 public static class ChangeTrackingProxyFactory
 {
     private static readonly Dictionary<Type, Func<object, object>> _proxies = [];
@@ -12,6 +13,7 @@ public static class ChangeTrackingProxyFactory
         _proxies.Add(typeof(T), x => func((T)x));
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T Create<T>(T model)
     {
         if (model == null)
