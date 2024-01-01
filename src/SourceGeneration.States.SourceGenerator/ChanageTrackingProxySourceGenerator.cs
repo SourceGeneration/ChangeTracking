@@ -135,7 +135,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             builder.AppendBlock($"public {typeProxy.Name}__Proxy__({typeFullName} source)", () =>
             {
-                foreach (var property in typeProxy.Properties.Where(x => !x.Required))
+                foreach (var property in typeProxy.Properties)
                 {
                     if (property.IsVirtual)
                     {
@@ -271,17 +271,14 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
         TypeDefinition typeProxy = new(type.Name, type.GetNamespace(), type.IsRecord);
 
-        foreach (var field in properties)
+        foreach (var property in properties)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (field.Type is not INamedTypeSymbol propertyType)
-                continue;
-
-            var property = CreateProperty(field);
-            if (property != null)
+            var propertyDefinition = CreateProperty(property);
+            if (propertyDefinition != null)
             {
-                typeProxy.Properties.Add(property);
+                typeProxy.Properties.Add(propertyDefinition);
             }
         }
 

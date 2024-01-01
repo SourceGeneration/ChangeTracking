@@ -3,7 +3,6 @@
 [TestClass]
 public class InterfaceEnumerableChangeTrackingTest
 {
-
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
@@ -44,3 +43,4 @@ public class InterfaceEnumerableChangeTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.IEnumerableOfObject.Last()).IsCascadingChanged);
     }
 }
+

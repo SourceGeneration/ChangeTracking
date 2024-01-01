@@ -50,3 +50,11 @@ public class CascadingTrackingObject
 {
     public virtual int Value { get; set; }
 }
+
+[ChangeTracking]
+public class RequirePropertyTrackingObject
+{
+    public required virtual int Value { get; set; }
+    public required virtual int[] Array { get; set; } = [];
+    public required virtual IEnumerable<int> Enumerable { get; set; } = [];
+}
