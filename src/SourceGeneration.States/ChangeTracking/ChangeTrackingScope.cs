@@ -3,6 +3,6 @@
 public enum ChangeTrackingScope
 {
     RootChanged = 0,
-    RootOrSubsetChanged = 1,
+    RootOrCascadingChanged = 1,
     Always = 2,
 }
