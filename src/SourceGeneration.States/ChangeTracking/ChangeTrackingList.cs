@@ -48,6 +48,17 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem));
     }
 
+    public void AddRange(IEnumerable<T> items)
+    {
+        var newItems = items.Select(x => ChangeTrackingProxyFactory.Create(x)).ToList();
+        foreach (var newItem in newItems)
+        {
+            _list.Add(newItem);
+            TryAddNotifyEventSubscription(newItem);
+        }
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems));
+    }
+
     public void Clear()
     {
         foreach (var item in _list)
@@ -65,6 +76,18 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
         _list.Insert(index, newItem);
         TryAddNotifyEventSubscription(newItem);
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem, index));
+    }
+
+    public void InsertRange(int index, IEnumerable<T> items)
+    {
+        var newItems = items.Select(x => ChangeTrackingProxyFactory.Create(x)).ToList();
+        for (int i = 0; i < newItems.Count; i++)
+        {
+            T newItem = newItems[i];
+            _list.Insert(i + index, newItem);
+            TryAddNotifyEventSubscription(newItem);
+        }
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems, index));
     }
 
     public bool Remove(T item)

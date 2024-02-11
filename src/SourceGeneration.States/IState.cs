@@ -1,4 +1,6 @@
-﻿namespace SourceGeneration.States;
+﻿using System.Collections;
+
+namespace SourceGeneration.States;
 
 public interface IState : IDisposable
 {
@@ -8,14 +10,13 @@ public interface IState : IDisposable
 public interface IState<TState> : IState, IObservable<TState>
 {
     TState Value { get; }
-
-    IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue?> subscriber, ChangeTrackingScope distinctUntilChanged = ChangeTrackingScope.RootChanged);
-
+    IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope distinctUntilChanged = ChangeTrackingScope.RootChanged);
+    IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, IEqualityComparer<TValue> comparer);
     IDisposable SubscribeBindingChanged(Action<TState> next);
 }
 
 public interface IStore<TState> : IState<TState>
 {
-    void Set(TState state);
+    //void Set(TState state);
     void Update(Action<TState> action);
 }

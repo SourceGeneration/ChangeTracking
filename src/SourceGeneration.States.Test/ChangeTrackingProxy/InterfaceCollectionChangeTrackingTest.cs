@@ -56,6 +56,7 @@ public class InterfaceCollectionChangeTrackingTest
         {
             ICollectionOfValue = [1]
         });
+        //tracking.AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);

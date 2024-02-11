@@ -21,7 +21,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             predicate: static (node, token) =>
             {
                 if (node is not TypeDeclarationSyntax type
-                    //|| !type.IsPartial()
+                    //|| type.IsPartial()
                     || type.IsAbstract()
                     || type.TypeParameterList != null)
                 {
