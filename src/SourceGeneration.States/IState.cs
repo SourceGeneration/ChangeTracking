@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace SourceGeneration.States;
+﻿namespace SourceGeneration.States;
 
 public interface IState : IDisposable
 {

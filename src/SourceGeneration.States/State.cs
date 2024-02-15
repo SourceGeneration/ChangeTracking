@@ -10,12 +10,12 @@ public class State<TState> : IState<TState>, IStore<TState>
     private readonly BehaviorSubject<TState> _subject;
     private readonly BehaviorSubject<TState> _afterChange;
     private readonly WhereSubject<TState> _afterDistinctUtilChange;
+    private readonly TState _value;
 
     private readonly State<TState>? _parent;
     private readonly IDisposable? _parentSubscription;
     private ImmutableList<IChangeTracking> _bindings = ImmutableList.Create<IChangeTracking>();
     private ImmutableList<IDisposable> _afterUpdateSubscribes = ImmutableList.Create<IDisposable>();
-    private TState _value;
 
     public State(TState state)
     {
