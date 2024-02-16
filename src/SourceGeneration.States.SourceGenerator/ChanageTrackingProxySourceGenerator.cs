@@ -110,7 +110,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             builder.AppendLine("[global::System.Runtime.CompilerServices.ModuleInitializer]");
             builder.AppendBlock("public static void __Initialize()", () =>
             {
-                var requires = typeProxy.Properties.Where(x => x.Required).Select(x => $"{x.PropertyName} = x.{x.PropertyName}").ToList();
+                var requires = typeProxy.Properties.Where(x => x.Required || x.IsInitOnly).Select(x => $"{x.PropertyName} = x.{x.PropertyName}").ToList();
                 if (requires.Count > 0)
                 {
                     string initProperties = "{ " + string.Join(", ", requires) + " }";
@@ -137,14 +137,26 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             {
                 foreach (var property in typeProxy.Properties)
                 {
-                    if (property.IsVirtual)
+                    if (!property.IsInitOnly && !property.Required)
                     {
-                        builder.AppendLine($"this.__Set__{property.PropertyName}(source.{property.PropertyName});");
+                        if (property.IsVirtual)
+                        {
+                            builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
+                        }
+                        else
+                        {
+                            builder.AppendLine($"base.{property.PropertyName} = source.{property.PropertyName};");
+                        }
                     }
-                    else
-                    {
-                        builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
-                    }
+
+                    //if (property.IsVirtual)
+                    //{
+                    //    builder.AppendLine($"this.__Set__{property.PropertyName}(source.{property.PropertyName});");
+                    //}
+                    //else
+                    //{
+                    //    builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
+                    //}
                 }
             });
             builder.AppendLine();
@@ -189,80 +201,102 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 {
                     builder.AppendLine($"get => base.{property.PropertyName};");
 
-                    builder.AppendBlock("set", () =>
+                    builder.AppendBlock(property.IsInitOnly ? "init" : "set", () =>
                     {
-                        builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(base.{property.PropertyName}, value))", () =>
-                        {
-                            builder.AppendLine($"this.__Set__{property.PropertyName}(value);");
-                            builder.AppendLine($"this.OnPropertyChanged(\"{property.PropertyName}\");");
-                        });
+                        EmitSetMethod(builder, property);
+
                     });
                 });
                 builder.AppendLine();
             }
 
-            foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
-            {
-                builder.AppendBlock($"private void __Set__{property.PropertyName}({property.Type} value)", () =>
-                {
-                    if (property.Kind == TypeProxyKind.Value)
-                    {
-                        builder.AppendLine($"base.{property.PropertyName} = value;");
-                    }
-                    else
-                    {
-                        builder.AppendBlock($"if (base.{property.PropertyName} is not null)", () =>
-                        {
-                            if (property.NotifyPropertyChanged)
-                            {
-                                builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged __propertyChanged__)", () =>
-                                {
-                                    builder.AppendLine("__propertyChanged__.PropertyChanged -= OnPropertyChanged;");
-                                });
-                            }
-                            if (property.NotifyCollectionChanged)
-                            {
-                                builder.AppendBlock($"if (base.{property.PropertyName} is global::System.Collections.Specialized.INotifyCollectionChanged __collectionChanged__)", () =>
-                                {
-                                    builder.AppendLine("__collectionChanged__.CollectionChanged -= OnCollectionChanged;");
-                                });
-                            }
-                        });
-                        builder.AppendLine();
-                        builder.AppendBlock("if (value is null)", () =>
-                        {
-                            builder.AppendLine($"base.{property.PropertyName} = null;");
-                        });
-                        builder.AppendBlock("else", () =>
-                        {
-                            if (property.Kind == TypeProxyKind.Collection)
-                            {
-                                builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
-                            }
-                            else if (property.Kind == TypeProxyKind.Dictionary)
-                            {
-                                builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
-                            }
-                            else
-                            {
-                                builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
-                            }
+            //foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
+            //{
+            //    builder.AppendBlock($"private void __Set__{property.PropertyName}({property.Type} value)", () =>
+            //    {
+            //        EmitSetMethod(builder, property);
+            //    });
+            //}
 
-                            if (property.NotifyPropertyChanged)
-                            {
-                                builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged += OnPropertyChanged;");
-                            }
-                            if (property.NotifyCollectionChanged)
-                            {
-                                builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged += OnCollectionChanged;");
-                            }
+        });
+    }
+
+    private static void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
+    {
+        builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(base.{property.PropertyName}, value))", () =>
+        {
+            if (property.Kind == TypeProxyKind.Value)
+            {
+                builder.AppendLine($"base.{property.PropertyName} = value;");
+            }
+            else
+            {
+                builder.AppendBlock($"if (base.{property.PropertyName} is not null)", () =>
+                {
+                    if (property.NotifyPropertyChanged)
+                    {
+                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged __propertyChanged__)", () =>
+                        {
+                            builder.AppendLine("__propertyChanged__.PropertyChanged -= OnPropertyChanged;");
                         });
-                        builder.AppendLine();
                     }
+                    if (property.NotifyCollectionChanged)
+                    {
+                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.Collections.Specialized.INotifyCollectionChanged __collectionChanged__)", () =>
+                        {
+                            builder.AppendLine("__collectionChanged__.CollectionChanged -= OnCollectionChanged;");
+                        });
+                    }
+                });
+                builder.AppendLine();
+                builder.AppendBlock("if (value is null)", () =>
+                {
+                    builder.AppendLine($"base.{property.PropertyName} = null;");
+                });
+                builder.AppendBlock("else", () =>
+                {
+                    SetPropertyProxy(builder, property);
                 });
             }
 
+            builder.AppendLine($"this.OnPropertyChanged(\"{property.PropertyName}\");");
         });
+        if(property.Kind == TypeProxyKind.Collection)
+        {
+            builder.AppendBlock("else if (value is not null && value is not global::System.ComponentModel.IChangeTracking)", () =>
+            {
+                SetPropertyProxy(builder, property);
+            });
+        }
+    }
+
+    private static void SetPropertyProxy(CSharpCodeBuilder builder, PropertyDefinition property)
+    {
+        if (property.Kind == TypeProxyKind.Collection)
+        {
+            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
+        }
+        else if (property.Kind == TypeProxyKind.Dictionary)
+        {
+            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
+        }
+        else
+        {
+            builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
+        }
+
+        if (property.NotifyPropertyChanged)
+        {
+            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged += OnPropertyChanged;");
+        }
+        if (property.NotifyCollectionChanged)
+        {
+            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged += OnCollectionChanged;");
+        }
+        if (property.ChangeTracking)
+        {
+            builder.AppendLine($"this.__cascadingChanged = ((global::System.ComponentModel.IChangeTracking)base.{property.PropertyName}).IsChanged;");
+        }
     }
 
     private static TypeDefinition CreateProxy(INamedTypeSymbol type, CancellationToken cancellationToken)
@@ -297,7 +331,10 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 type.IsTupleType ||
                 typeName == "string")
             {
-                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsVirtual, property.IsRequired);
+                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsVirtual, property.IsRequired)
+                {
+                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                };
             }
 
             if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
@@ -308,6 +345,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 {
                     return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsVirtual, property.IsRequired)
                     {
+                        IsInitOnly = property.SetMethod?.IsInitOnly == true,
                         KeyType = namedType.TypeArguments[0].GetFullName(),
                         ElementType = namedType.TypeArguments[1].GetFullName(),
                         NotifyCollectionChanged = true,
@@ -321,6 +359,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 {
                     return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsVirtual, property.IsRequired)
                     {
+                        IsInitOnly = property.SetMethod?.IsInitOnly == true,
                         ElementType = namedType.TypeArguments[0].GetFullName(),
                         NotifyCollectionChanged = true,
                         NotifyPropertyChanged = true,
@@ -358,6 +397,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
             {
+                IsInitOnly = property.SetMethod?.IsInitOnly == true,
                 NotifyCollectionChanged = notifyCollectionChanged,
                 NotifyPropertyChanged = notifyPropertyChanged || proxiable,
                 ChangeTracking = changeTracking || proxiable,
@@ -381,6 +421,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
         public readonly TypeProxyKind Kind = proxyKind;
         public readonly bool Required = required;
         public readonly bool IsVirtual = isVirtual;
+        public bool IsInitOnly;
 
         public string? KeyType;
         public string? ElementType;
