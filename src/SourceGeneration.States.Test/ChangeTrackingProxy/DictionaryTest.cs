@@ -1,12 +1,12 @@
 ﻿namespace SourceGeneration.States.Test.ChangeTracking;
 
 [TestClass]
-public class DictionaryChangeTrackingTest
+public class DictionaryTest
 {
     [TestMethod]
     public void ValueDictionary_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingDictionaryObject());
 
         tracking.TrackingValueDictionary.Add(1, 1);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
@@ -24,7 +24,7 @@ public class DictionaryChangeTrackingTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingDictionaryObject()
         {
             TrackingValueDictionary = new ChangeTrackingDictionary<int, int>
             {
@@ -51,7 +51,7 @@ public class DictionaryChangeTrackingTest
     [TestMethod]
     public void ValueList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingDictionaryObject()
         {
             TrackingValueDictionary = new ChangeTrackingDictionary<int, int>
             {
@@ -78,7 +78,7 @@ public class DictionaryChangeTrackingTest
     [TestMethod]
     public void ValueList_Clear()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingDictionaryObject()
         {
             TrackingValueDictionary = new ChangeTrackingDictionary<int, int>
             {
@@ -105,7 +105,7 @@ public class DictionaryChangeTrackingTest
     [TestMethod]
     public void ObjectDictionary_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingDictionaryObject()
         {
             TrackingObjectDictionary = new ChangeTrackingDictionary<int, TrackingObject>
             {
@@ -146,4 +146,11 @@ public class DictionaryChangeTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.TrackingObjectDictionary[1]).IsCascadingChanged);
     }
 
+}
+
+[ChangeTracking]
+public class TrackingDictionaryObject
+{
+    public virtual ChangeTrackingDictionary<int, int> TrackingValueDictionary { get; set; } = [];
+    public virtual ChangeTrackingDictionary<int, TrackingObject> TrackingObjectDictionary { get; set; } = [];
 }

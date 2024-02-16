@@ -1,12 +1,12 @@
 ﻿namespace SourceGeneration.States.Test.ChangeTracking;
 
 [TestClass]
-public class InterfaceEnumerableChangeTrackingTest
+public class EnumerableTest
 {
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingEnumerableObject()
         {
             IEnumerableOfObject = [new TrackingObject(), new TrackingObject()]
         });
@@ -44,3 +44,10 @@ public class InterfaceEnumerableChangeTrackingTest
     }
 }
 
+[ChangeTracking]
+public class TrackingEnumerableObject
+{
+    public virtual IEnumerable<int> IEnumerableOfValue { get; set; } = [];
+    public virtual IEnumerable<TrackingObject> IEnumerableOfObject { get; set; } = [];
+
+}

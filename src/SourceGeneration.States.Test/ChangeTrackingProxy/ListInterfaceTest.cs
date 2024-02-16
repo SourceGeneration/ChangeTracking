@@ -1,12 +1,12 @@
 ﻿namespace SourceGeneration.States.Test.ChangeTracking;
 
 [TestClass]
-public class InterfaceListChangeTrackingTest
+public class ListInterfaceTest
 {
     [TestMethod]
     public void ValueList_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject());
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -27,7 +27,7 @@ public class InterfaceListChangeTrackingTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
         {
             IListOfValue = [1]
         });
@@ -51,7 +51,7 @@ public class InterfaceListChangeTrackingTest
     [TestMethod]
     public void ValueList_Clear()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
         {
             IListOfValue = [1]
         });
@@ -75,7 +75,7 @@ public class InterfaceListChangeTrackingTest
     [TestMethod]
     public void ValueList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
         {
             IListOfValue = [1]
         });
@@ -99,7 +99,7 @@ public class InterfaceListChangeTrackingTest
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
         {
             IListOfObject = [new TrackingObject(), new TrackingObject()]
         });
@@ -135,4 +135,12 @@ public class InterfaceListChangeTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[1]).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.IListOfObject[1]).IsCascadingChanged);
     }
+}
+
+[ChangeTracking]
+public class TrackingListInterfaceObject
+{
+
+    public virtual IList<int> IListOfValue { get; set; } = [];
+    public virtual IList<TrackingObject> IListOfObject { get; set; } = [];
 }

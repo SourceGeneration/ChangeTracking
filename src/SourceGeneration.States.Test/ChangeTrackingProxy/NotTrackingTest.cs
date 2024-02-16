@@ -6,7 +6,7 @@ public class NotTrackingTest
     [TestMethod]
     public void NotTracking()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new NotTrackingWarpperObject());
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
@@ -25,7 +25,7 @@ public class NotTrackingTest
     [TestMethod]
     public void CascadingTracking()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new NotTrackingWarpperObject());
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.CascadingTracking).IsChanged);
@@ -48,7 +48,7 @@ public class NotTrackingTest
     [TestMethod]
     public void NotTrackingProperty()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new NotTrackingWarpperObject());
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.NotTrackingProperty).IsChanged);
@@ -67,4 +67,29 @@ public class NotTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.NotTrackingProperty).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.NotTrackingProperty).IsCascadingChanged);
     }
+}
+
+[ChangeTracking]
+public class NotTrackingWarpperObject
+{
+    public virtual NotTrackingObject NotTracking { get; set; } = new();
+    public virtual NotTrackingPropertyObject NotTrackingProperty { get; set; } = new();
+    public virtual CascadingTrackingObject CascadingTracking { get; set; } = new();
+}
+
+public class NotTrackingObject
+{
+    public virtual int Value { get; set; }
+}
+
+[ChangeTracking]
+public class NotTrackingPropertyObject
+{
+    public int Value { get; set; }
+}
+
+[ChangeTracking]
+public class CascadingTrackingObject
+{
+    public virtual int Value { get; set; }
 }

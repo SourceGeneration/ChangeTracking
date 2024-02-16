@@ -1,12 +1,12 @@
 ﻿namespace SourceGeneration.States.Test.ChangeTracking;
 
 [TestClass]
-public class InterfaceDictionaryChangeTrackingTest
+public class DictionaryInterfaceTest
 {
     [TestMethod]
     public void ValueDictionary_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject());
 
         tracking.IDictionaryOfValue.Add(1, 1);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
@@ -24,7 +24,7 @@ public class InterfaceDictionaryChangeTrackingTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject()
         {
             IDictionaryOfValue = new Dictionary<int, int>
             {
@@ -51,7 +51,7 @@ public class InterfaceDictionaryChangeTrackingTest
     [TestMethod]
     public void ValueList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject()
         {
             IDictionaryOfValue = new Dictionary<int, int>
             {
@@ -78,7 +78,7 @@ public class InterfaceDictionaryChangeTrackingTest
     [TestMethod]
     public void ObjectDictionary_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject()
         {
             IDictionaryOfObject = new Dictionary<int, TrackingObject>
             {
@@ -119,4 +119,12 @@ public class InterfaceDictionaryChangeTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.IDictionaryOfObject[1]).IsCascadingChanged);
     }
 
+}
+
+[ChangeTracking]
+public class TrackingInterfaceDictionaryObject
+{
+
+    public virtual IDictionary<int, int> IDictionaryOfValue { get; set; } = new Dictionary<int, int>();
+    public virtual IDictionary<int, TrackingObject> IDictionaryOfObject { get; set; } = new Dictionary<int, TrackingObject>();
 }

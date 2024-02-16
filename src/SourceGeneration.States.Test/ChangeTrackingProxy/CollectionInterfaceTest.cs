@@ -2,12 +2,12 @@
 
 
 [TestClass]
-public class InterfaceCollectionChangeTrackingTest
+public class CollectionInterfaceTest
 {
     [TestMethod]
     public void ValueList_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject());
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject());
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -28,7 +28,7 @@ public class InterfaceCollectionChangeTrackingTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject()
         {
             ICollectionOfValue = [1]
         });
@@ -52,7 +52,7 @@ public class InterfaceCollectionChangeTrackingTest
     [TestMethod]
     public void ValueList_Clear()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject()
         {
             ICollectionOfValue = [1]
         });
@@ -77,7 +77,7 @@ public class InterfaceCollectionChangeTrackingTest
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingObject()
+        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject()
         {
             ICollectionOfObject = [new TrackingObject(), new TrackingObject()]
         });
@@ -114,3 +114,12 @@ public class InterfaceCollectionChangeTrackingTest
         Assert.IsFalse(((ICascadingChangeTracking)tracking.ICollectionOfObject.Last()).IsCascadingChanged);
     }
 }
+
+[ChangeTracking]
+public class TrackingCollectionObject
+{
+
+    public virtual ICollection<int> ICollectionOfValue { get; set; } = [];
+    public virtual ICollection<TrackingObject> ICollectionOfObject { get; set; } = [];
+}
+
