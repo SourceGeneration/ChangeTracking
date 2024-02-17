@@ -68,37 +68,6 @@ public class State<TState> : IState<TState>, IStore<TState>
         }
     }
 
-    //public void Set(TState state)
-    //{
-    //    var newValue = ChangeTrackingProxyFactory.Create(state);
-    //    _value = newValue;
-
-    //    try
-    //    {
-    //        if (_parent == null)
-    //        {
-
-    //            if (!_subject.IsDisposed)
-    //            {
-    //                _subject.OnNext(_value);
-    //                _afterChange.OnNext(_value);
-    //            }
-    //        }
-    //        else
-    //        {
-    //            _parent.Set(_value);
-    //        }
-
-    //        AcceptBindingChanges();
-    //        AcceptStateChanges();
-    //    }
-    //    catch (ObjectDisposedException) { }
-    //    catch (Exception ex)
-    //    {
-    //        ExceptionDispatchInfo.Capture(ex).Throw();
-    //    }
-    //}
-
     private void AcceptStateChanges()
     {
         if (_value is IChangeTracking tacking)
