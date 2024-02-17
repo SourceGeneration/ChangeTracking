@@ -20,7 +20,7 @@ public sealed class ChangeTrackingSequenceEqualityComparer<TValue> : IEqualityCo
         var enumerator2 = ((IEnumerable)y).GetEnumerator();
 
         var next1 = enumerator1.MoveNext();
-        var next2 = enumerator1.MoveNext();
+        var next2 = enumerator2.MoveNext();
         while (next1 && next2)
         {
             var value2 = enumerator2.Current;
@@ -36,7 +36,7 @@ public sealed class ChangeTrackingSequenceEqualityComparer<TValue> : IEqualityCo
                 return false;
 
             next1 = enumerator1.MoveNext();
-            next2 = enumerator1.MoveNext();
+            next2 = enumerator2.MoveNext();
         }
 
         return next1 == next2;
