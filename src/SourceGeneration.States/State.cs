@@ -1,7 +1,10 @@
 ﻿using SourceGeneration.Rx;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Runtime.ExceptionServices;
+using System.Xml.Linq;
 
 namespace SourceGeneration.States;
 
@@ -87,23 +90,35 @@ public class State<TState> : IState<TState>, IStore<TState>
 
     public IDisposable Subscribe(IObserver<TState> observer) => _subject.Subscribe(observer);
 
-    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope changeTrackingScope = ChangeTrackingScope.RootChanged)
+    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope changeTrackingScope = ChangeTrackingScope.Root)
     {
-        var binding = new Binding<TValue>(
-            observable: new SelectSubject<TState, TValue>(_subject, selector),
-            subscriber: subscriber,
-            disposeCallback: b => _bindings = _bindings.Remove(b),
-            new ChangeTrackingScopeEqualityComparer<TValue>(changeTrackingScope));
+        return Bind(selector, null, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(changeTrackingScope));
+    }
 
-        _bindings = _bindings.Add(binding);
-
-        return binding;
+    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, ChangeTrackingScope changeTrackingScope = ChangeTrackingScope.Root)
+    {
+        return Bind(selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(changeTrackingScope));
     }
 
     public IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, IEqualityComparer<TValue> equalityComparer)
     {
+        return Bind(selector, null, subscriber, equalityComparer);
+    }
+
+    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, IEqualityComparer<TValue> equalityComparer)
+    {
+        BehaviorSubject<TValue> observable;
+        if(predicate == null)
+        {
+            observable = new SelectSubject<TState, TValue>(_subject, selector);
+        }
+        else
+        {
+            observable = new WhereSubject<TValue>(new SelectSubject<TState, TValue>(_subject, selector), predicate);
+        }
+
         var binding = new Binding<TValue>(
-            observable: new SelectSubject<TState, TValue>(_subject, selector),
+            observable: observable,
             subscriber: subscriber,
             disposeCallback: b => _bindings = _bindings.Remove(b),
             equalityComparer);
@@ -112,7 +127,6 @@ public class State<TState> : IState<TState>, IStore<TState>
 
         return binding;
     }
-
 
     private bool HasBindingChanged() => _bindings.Any(x => x.IsChanged);
 

@@ -8,8 +8,10 @@ public interface IState : IDisposable
 public interface IState<TState> : IState, IObservable<TState>
 {
     TState Value { get; }
-    IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope distinctUntilChanged = ChangeTrackingScope.RootChanged);
     IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, IEqualityComparer<TValue> comparer);
+    IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, IEqualityComparer<TValue> equalityComparer);
+    IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope distinctUntilChanged = ChangeTrackingScope.Root);
+    IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, ChangeTrackingScope distinctUntilChanged = ChangeTrackingScope.Root);
     IDisposable SubscribeBindingChanged(Action<TState> next);
 }
 
