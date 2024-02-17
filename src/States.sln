@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SourceGeneration.States.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SourceGeneration.States.SourceGenerator.Test", "SourceGeneration.States.SourceGenerator.Test\SourceGeneration.States.SourceGenerator.Test.csproj", "{9D7C93C9-0ACF-4BC7-8B08-2CFED6CF6DEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneration.States.Sample", "SourceGeneration.States.Sample\SourceGeneration.States.Sample.csproj", "{D66FB77F-29A4-4317-9917-F79D0BAE9AA0}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{9D7C93C9-0ACF-4BC7-8B08-2CFED6CF6DEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D7C93C9-0ACF-4BC7-8B08-2CFED6CF6DEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D7C93C9-0ACF-4BC7-8B08-2CFED6CF6DEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D66FB77F-29A4-4317-9917-F79D0BAE9AA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D66FB77F-29A4-4317-9917-F79D0BAE9AA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D66FB77F-29A4-4317-9917-F79D0BAE9AA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D66FB77F-29A4-4317-9917-F79D0BAE9AA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
