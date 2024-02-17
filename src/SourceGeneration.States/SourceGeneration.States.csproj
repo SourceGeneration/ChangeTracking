@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>12</LangVersion>
 
-		<Version>1.0.0-beta1.240217.1</Version>
+		<Version>1.0.0-beta1.240217.5</Version>
 		<Authors>SourceGeneration</Authors>
 		<Description>State management framework with Rx</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
