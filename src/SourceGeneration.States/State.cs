@@ -184,10 +184,11 @@ public class State<TState> : IState<TState>, IStore<TState>
         private readonly Action<TValue> _subscriber;
         private bool _disposed;
         private bool _changed;
-        private TValue _value = default!;
+        private TValue _value;
 
         public Binding(BehaviorSubject<TValue> observable, Action<TValue> subscriber, Action<IChangeTracking> disposeCallback, IEqualityComparer<TValue> equalityComparer)
         {
+            _value = observable.Value;
             _observable = observable;
             _subscriber = subscriber;
             _equalityComparer = equalityComparer;
@@ -201,7 +202,7 @@ public class State<TState> : IState<TState>, IStore<TState>
 
         public void AcceptChanges()
         {
-            _changed = true;
+            _changed = false;
         }
 
         public void Dispose()
