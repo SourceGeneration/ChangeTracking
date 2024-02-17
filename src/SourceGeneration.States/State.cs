@@ -1,10 +1,7 @@
 ﻿using SourceGeneration.Rx;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Runtime.ExceptionServices;
-using System.Xml.Linq;
 
 namespace SourceGeneration.States;
 
