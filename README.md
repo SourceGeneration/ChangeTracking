@@ -224,7 +224,7 @@ public class GoodsState
 
 ## Blazor
 
-States can integrated with `Blazor`, and supports `AOT` complation, more information at [`Blux`](https://github.com/SourceGenration/Blux) repo
+States can integrated with `Blazor`, and supports `AOT` compilation, more information at [`Blux`](https://github.com/SourceGenration/Blux) repo
 
 
 ```c#
