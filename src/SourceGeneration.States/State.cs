@@ -1,11 +1,12 @@
 ﻿using SourceGeneration.Rx;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 
 namespace SourceGeneration.States;
 
-public class State<TState> : IState<TState>, IStore<TState>
+public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicConstructors)] TState> : IState<TState>
 {
     private readonly BehaviorSubject<TState> _subject;
     private readonly BehaviorSubject<TState> _afterChange;
@@ -19,7 +20,7 @@ public class State<TState> : IState<TState>, IStore<TState>
 
     public State(TState state)
     {
-        _value = state;
+        _value = ChangeTrackingProxyFactory.Create(state);
         _subject = new BehaviorSubject<TState>(_value);
         _afterChange = new BehaviorSubject<TState>(_value);
         _afterDistinctUtilChange = new WhereSubject<TState>(_afterChange, _ => HasBindingChanged());
@@ -87,14 +88,14 @@ public class State<TState> : IState<TState>, IStore<TState>
 
     public IDisposable Subscribe(IObserver<TState> observer) => _subject.Subscribe(observer);
 
-    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope changeTrackingScope = ChangeTrackingScope.Root)
+    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        return Bind(selector, null, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(changeTrackingScope));
+        return Bind(selector, null, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
     }
 
-    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, ChangeTrackingScope changeTrackingScope = ChangeTrackingScope.Root)
+    public IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        return Bind(selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(changeTrackingScope));
+        return Bind(selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
     }
 
     public IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, IEqualityComparer<TValue> equalityComparer)
@@ -195,11 +196,11 @@ public class State<TState> : IState<TState>, IStore<TState>
         private readonly Action<TValue> _subscriber;
         private bool _disposed;
         private bool _changed;
-        private TValue _value;
+        private TValue _value = default!;
 
         public Binding(BehaviorSubject<TValue> observable, Action<TValue> subscriber, Action<IChangeTracking> disposeCallback, IEqualityComparer<TValue> equalityComparer)
         {
-            _value = observable.Value;
+            //_value = observable.Value;
             _observable = observable;
             _subscriber = subscriber;
             _equalityComparer = equalityComparer;
