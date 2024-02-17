@@ -6,7 +6,7 @@ State<Goods> state = new(new Goods
     Count = 5,
 });
 
-// The state will push last value when you first subscribe
+// The state will push last value when you subscribed
 // ouput: 5
 state
     .Where(x => x.Count >= 5)
