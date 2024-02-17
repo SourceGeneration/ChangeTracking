@@ -225,6 +225,28 @@ public class GoodsState
 ## Blazor
 
 States can integrated with `Blazor`, and supports `AOT` complation, more information at [`Blux`](https://github.com/SourceGenration/Blux) repo
-```
+
+
+```c#
+@inject State<MyState> State
+
+<h1>Count: @Count</h1>
+
+<button @onclick="Click">Add</button>
+
+@code{
+    private int Count;
+
+    protected override void OnInitialized()
+    {
+        State.Bind(x => x.Count, x => Count = x);
+        State.SubscribeBindingChanged(StateHasChanged);
+    }
+
+    private void Click()
+    {
+        State.Update(x => x.Count++);
+    }
+}
 
 ```
