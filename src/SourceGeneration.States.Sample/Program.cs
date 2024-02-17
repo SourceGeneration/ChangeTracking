@@ -27,5 +27,5 @@ Console.ReadLine();
 public class MyState
 {
     public virtual int A { get; set; }
-    public virtual string B { get; set; }
+    public virtual string? B { get; set; }
 }
