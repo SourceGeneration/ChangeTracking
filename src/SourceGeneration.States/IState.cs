@@ -15,6 +15,5 @@ public interface IState<TState> : IState, IObservable<TState>
 
 public interface IStore<TState> : IState<TState>
 {
-    //void Set(TState state);
     void Update(Action<TState> action);
 }
