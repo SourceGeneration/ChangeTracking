@@ -13,14 +13,18 @@ public sealed class ChangeTrackingScopeEqualityComparer<TValue>(ChangeTrackingSc
         if (!EqualityComparer<TValue>.Default.Equals(x, y))
             return false;
 
-        if (changeTrackingScope == ChangeTrackingScope.RootChanged)
-        {
-            if (y is ICascadingChangeTracking cascading && cascading.IsChanged && !cascading.IsCascadingChanged)
-                return true;
-        }
-
         if (y is IChangeTracking tracking && tracking.IsChanged)
-            return false;
+        {
+            if (changeTrackingScope == ChangeTrackingScope.Root)
+            {
+                if (y is ICascadingChangeTracking cascading)
+                    return !cascading.IsCascadingChanged;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         return true;
     }
