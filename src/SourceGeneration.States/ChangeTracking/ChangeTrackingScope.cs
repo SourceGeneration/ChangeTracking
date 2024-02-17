@@ -2,7 +2,7 @@
 
 public enum ChangeTrackingScope
 {
-    RootChanged = 0,
-    RootOrCascadingChanged = 1,
+    Root = 0,
+    Cascading = 1,
     Always = 2,
 }
