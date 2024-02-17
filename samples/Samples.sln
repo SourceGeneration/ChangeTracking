@@ -19,6 +19,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MergeBindingsChanges", "Mer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjectionAOT", "DependencyInjectionAot\DependencyInjectionAOT.csproj", "{5C7C169C-A94D-4EE9-8C1A-D86AC42DCC9A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorStates", "BlazorStates\BlazorStates\BlazorStates.csproj", "{92D09AE1-8918-4952-9803-4C5A903EDDFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorStates.Client", "BlazorStates\BlazorStates.Client\BlazorStates.Client.csproj", "{C974EE3B-3E63-472E-9E7E-BC88765D3844}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Blazor", "Blazor", "{B706BA92-B604-4BC2-AA78-BD0C135A95A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,9 +63,21 @@ Global
 		{5C7C169C-A94D-4EE9-8C1A-D86AC42DCC9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C7C169C-A94D-4EE9-8C1A-D86AC42DCC9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C7C169C-A94D-4EE9-8C1A-D86AC42DCC9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92D09AE1-8918-4952-9803-4C5A903EDDFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92D09AE1-8918-4952-9803-4C5A903EDDFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92D09AE1-8918-4952-9803-4C5A903EDDFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92D09AE1-8918-4952-9803-4C5A903EDDFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C974EE3B-3E63-472E-9E7E-BC88765D3844}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C974EE3B-3E63-472E-9E7E-BC88765D3844}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C974EE3B-3E63-472E-9E7E-BC88765D3844}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C974EE3B-3E63-472E-9E7E-BC88765D3844}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{92D09AE1-8918-4952-9803-4C5A903EDDFC} = {B706BA92-B604-4BC2-AA78-BD0C135A95A9}
+		{C974EE3B-3E63-472E-9E7E-BC88765D3844} = {B706BA92-B604-4BC2-AA78-BD0C135A95A9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CD623BFF-C5B1-44CC-B9FC-8571EE224E96}
