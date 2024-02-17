@@ -1,6 +1,8 @@
-﻿namespace SourceGeneration.Rx;
+﻿using System;
 
-internal class SelectSubject<TSource, TResult> : BehaviorSubject<TResult>
+namespace SourceGeneration.Rx;
+
+internal class SelectSubject<TSource, TResult> : BehaviorSubject<TResult>, IObserver<TSource>
 {
     private IDisposable _subscription;
     private Func<TSource, TResult>? _selector;
@@ -8,16 +10,15 @@ internal class SelectSubject<TSource, TResult> : BehaviorSubject<TResult>
     public SelectSubject(BehaviorSubject<TSource> source, Func<TSource, TResult> selector) : base(selector(source.Value))
     {
         _selector = selector;
-        _subscription = source.Subscribe(new AnonymousObserver<TSource>(
-            next =>
-            {
-                if (!IsDisposed)
-                {
-                    OnNext(_selector(next));
-                }
-            },
-            OnError,
-            OnCompleted));
+        _subscription = source.Subscribe(this);
+    }
+
+    public void OnNext(TSource value)
+    {
+        if (!IsDisposed)
+        {
+            OnNext(_selector!(value));
+        }
     }
 
     public override void Dispose()

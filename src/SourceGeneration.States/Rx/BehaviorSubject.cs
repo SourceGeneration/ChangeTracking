@@ -134,11 +134,14 @@ internal class BehaviorSubject<T>(T value) : IObserver<T>, IObservable<T>, IDisp
 
         if (os != null)
         {
-            foreach (var o in os)
-            {
-                o.OnNext(value);
-            }
+            OnNext(value, os);
         }
+    }
+
+    protected virtual void OnNext(T value, params IObserver<T>[] observers)
+    {
+        foreach (var o in observers)
+            o.OnNext(value);
     }
 
     public IDisposable Subscribe(IObserver<T> observer)
@@ -154,7 +157,7 @@ internal class BehaviorSubject<T>(T value) : IObserver<T>, IObservable<T>, IDisp
             if (!_isStopped)
             {
                 _observers = _observers.Add(observer);
-                observer.OnNext(_value);
+                OnNext(value, observer);
                 return new Subscription(this, observer);
             }
 
