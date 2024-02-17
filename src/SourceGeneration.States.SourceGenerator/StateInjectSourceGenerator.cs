@@ -54,7 +54,7 @@ public class StateInjectSourceGenerator : IIncrementalGenerator
                 builder.AppendLine("[global::System.Runtime.CompilerServices.ModuleInitializer]");
                 builder.AppendBlock("public static void Initialize()", () =>
                 {
-                    foreach (var tree in types.GroupBy(x=>x.SyntaxTree))
+                    foreach (var tree in types.GroupBy(x => x.SyntaxTree))
                     {
                         var model = compilation.GetSemanticModel(tree.Key);
 
@@ -79,25 +79,33 @@ public class StateInjectSourceGenerator : IIncrementalGenerator
     private static string? GenerateProxy(ITypeSymbol stateModel)
     {
         var attribute = stateModel.GetAttribute(StateAttribute);
-
         if (attribute == null)
         {
             return null;
         }
 
+        string state;
         var ns = stateModel.GetNamespace();
+        if (ns == null)
+        {
+            state = stateModel.Name;
+        }
+        else
+        {
+            state = $"{ns}.{stateModel.Name}";
+        }
 
         if (attribute.ConstructorArguments.Length == 0)
         {
-            return $"global::{RootNamespace}.StateRegister.Add<{ns}.{stateModel.Name}>();";
+            return $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>();";
         }
         else if (attribute.ConstructorArguments.Length == 1)
         {
             return (int)attribute.ConstructorArguments[0].Value! switch
             {
-                0 => $"global::{RootNamespace}.StateRegister.Add<{ns}.{stateModel.Name}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton);",
-                1 => $"global::{RootNamespace}.StateRegister.Add<{ns}.{stateModel.Name}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped);",
-                _ => $"global::{RootNamespace}.StateRegister.Add<{ns}.{stateModel.Name}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient);",
+                0 => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton);",
+                1 => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped);",
+                _ => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient);",
             };
         }
 
