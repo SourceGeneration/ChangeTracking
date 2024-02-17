@@ -16,7 +16,7 @@ public sealed class ChangeTrackingScopeEqualityComparer<TValue>(ChangeTrackingSc
         if (changeTrackingScope == ChangeTrackingScope.RootChanged)
         {
             if (y is ICascadingChangeTracking cascading && cascading.IsChanged && !cascading.IsCascadingChanged)
-                return false;
+                return true;
         }
 
         if (y is IChangeTracking tracking && tracking.IsChanged)
