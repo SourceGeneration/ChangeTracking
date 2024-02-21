@@ -11,4 +11,6 @@ public interface IScopedState<[DynamicallyAccessedMembers(DynamicallyAccessedMem
     IDisposable Bind<TValue>(Func<TState, TValue> selector, Action<TValue> subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root);
     IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root);
     IDisposable SubscribeBindingChanged(Action<TState> next);
+
+    void Update(Action<TState> action);
 }
