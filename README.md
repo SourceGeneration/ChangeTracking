@@ -33,7 +33,7 @@ The proxy class implement `INotifyPropertyChanged` and `IChangeTracking`
 ```c#
 internal class Goods__Proxy__ : Goods, INotifyPropertyChanged, System.ComponentModel.IChangeTracking
 {
-    //your properties
+    //Properties override
 }
 ```
 
@@ -224,7 +224,7 @@ public class GoodsState
 
 ## Blazor
 
-States can integrated with `Blazor`, and supports `AOT` complation, more information at [`Blux`](https://github.com/SourceGenration/Blux) repo
+States can integrated with `Blazor`, and supports `AOT` compilation, more information see [`Blux`](https://github.com/SourceGeneration/Blux) repo
 
 
 ```c#
@@ -236,16 +236,22 @@ States can integrated with `Blazor`, and supports `AOT` complation, more informa
 
 @code{
     private int Count;
+    private IDisposable _disposable;
 
     protected override void OnInitialized()
     {
-        State.Bind(x => x.Count, x => Count = x);
+        _disposable = State.Bind(x => x.Count, x => Count = x);
         State.SubscribeBindingChanged(StateHasChanged);
     }
 
     private void Click()
     {
         State.Update(x => x.Count++);
+    }
+
+    public void Dispose()
+    {
+        _disposable.Dispose();
     }
 }
 
