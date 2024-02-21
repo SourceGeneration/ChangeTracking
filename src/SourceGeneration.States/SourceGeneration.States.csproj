@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>12</LangVersion>
 
-		<Version>1.0.0-beta1.240217.5</Version>
+		<Version>1.0.0-beta2.240221.1</Version>
 		<Authors>SourceGeneration</Authors>
 		<Description>State management framework with Rx</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
@@ -17,6 +17,12 @@
 		<PackageIcon>sg.png</PackageIcon>
 		<PackageTags>state,change tracking,proerpty changed,collection changed,source generation,rx,reactive</PackageTags>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>SourceGeneration.States.Test</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 	<ItemGroup>
 		<None Include=".\..\..\sg.png">
 			<Pack>True</Pack>
