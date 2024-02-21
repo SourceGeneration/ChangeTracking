@@ -1,4 +1,4 @@
-﻿namespace SourceGeneration.States.Test.ChangeTracking;
+﻿namespace SourceGeneration.States.Test.ChangeTrackingProxy;
 
 [TestClass]
 public class EnumerableTest
