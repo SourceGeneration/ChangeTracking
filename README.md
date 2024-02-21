@@ -196,7 +196,7 @@ state.Update(x => x.Count = 11);
 
 ## DependencyInjection
 
-Using `AddState` to inject state
+Using `AddState` to inject state, `ServiceLifetime.Scoped` is default value
 ```c#
 var services = new ServiceCollection()
     .AddState<GoodsState>(ServiceLifetime.Singleton)
@@ -221,6 +221,40 @@ public class GoodsState
     public virtual int Count { get; set; }
 }
 ```
+
+## Dispose & State Scope
+
+In most usage scenarios, when your page or component subscribes to the state, it must explicitly unsubscribe when the component is destroyed, otherwise it will result in a significant resource consumption.
+
+```c#
+State<Goods> state = new(new Goods());
+
+var disposable1 = state.Bind(x => x, x => {});
+var disposable2 = state.Bind(x => x, x => {});
+var disposable3 = state.SubscribeBindingChanged(() => { });
+
+disposable1.Dispose();
+disposable2.Dispose();
+disposable3.Dispose();
+```
+
+Of course, you can directly destroy the State object
+
+```c#
+```
+
+Invoke `CreateScope` method to create a scoped state
+
+```c#
+State<Goods> state = new(new Goods());
+Assert.IsTrue(state.IsRoot);
+
+using IScopedState<GoodsState> scopedState = State.CreateScope();
+Assert.IsFalse(scoped.IsRoot);
+// bind or update
+```
+In dependency injection, whether it is `ServiceLifetime.Singleton` or `ServiceLifetime.Scoped`, IScopedState is always `Transient`.
+
 
 ## Blazor
 
