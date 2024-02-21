@@ -7,11 +7,11 @@ internal class BehaviorSubject<T>(T value) : IObserver<T>, IObservable<T>, IDisp
 {
     private readonly object _gate = new();
 
-    private ImmutableList _observers = ImmutableList.Empty;
-    private bool _isStopped;
     private T _value = value;
+    private bool _isStopped;
     private Exception? _exception;
     private bool _isDisposed;
+    internal ImmutableList _observers = ImmutableList.Empty;
 
     public bool HasObservers => _observers?.Data.Length > 0;
 
@@ -157,7 +157,7 @@ internal class BehaviorSubject<T>(T value) : IObserver<T>, IObservable<T>, IDisp
             if (!_isStopped)
             {
                 _observers = _observers.Add(observer);
-                OnNext(value, observer);
+                OnNext(_value, observer);
                 return new Subscription(this, observer);
             }
 
