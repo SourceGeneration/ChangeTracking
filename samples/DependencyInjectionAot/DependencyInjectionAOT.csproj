@@ -10,6 +10,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-		<PackageReference Include="SourceGeneration.States" Version="1.0.0-beta1.240217.5" />
+		<PackageReference Include="SourceGeneration.States" Version="1.0.0-beta2.240221.1" />
 	</ItemGroup>
 </Project>

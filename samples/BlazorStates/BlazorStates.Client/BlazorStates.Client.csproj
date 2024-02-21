@@ -11,7 +11,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
-		<PackageReference Include="SourceGeneration.States" Version="1.0.0-beta1.240217.5" />
+		<PackageReference Include="SourceGeneration.States" Version="1.0.0-beta2.240221.1" />
 	</ItemGroup>
 
 </Project>

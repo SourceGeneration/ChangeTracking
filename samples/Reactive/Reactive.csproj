@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="SourceGeneration.States" Version="1.0.0-beta1.240217.5" />
+		<PackageReference Include="SourceGeneration.States" Version="1.0.0-beta2.240221.1" />
 		<PackageReference Include="System.Reactive" Version="6.0.0" />
 	</ItemGroup>
 
