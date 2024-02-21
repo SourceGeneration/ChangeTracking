@@ -7,11 +7,11 @@ Source generator based state management library without the reflection. You can 
 ## Installing States
 
 ```powershell
-Install-Package SourceGeneration.States -Version 1.0.0-beta1.240217.5
+Install-Package SourceGeneration.States -Version 1.0.0-beta2.240221.2
 ```
 
 ```powershell
-dotnet add package SourceGeneration.States --version 1.0.0-beta1.240217.5
+dotnet add package SourceGeneration.States --version 1.0.0-beta2.240221.2
 ```
 
 ## ChangeTacking
