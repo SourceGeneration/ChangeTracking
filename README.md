@@ -4,7 +4,7 @@
 
 States is a state management framework based on Source Generator and Reactive (RX) with no emissions, and it supports AOT compilation.
 
-## Installing States
+## Installing
 
 ```powershell
 Install-Package SourceGeneration.States -Version 1.0.0-beta2.240221.2
@@ -134,7 +134,7 @@ state.Update(x => x.Tags[0].Tag = "first tag has modified * 2");
 ```
 
 ## Reactive(Rx) Supports
-State implement `IObserable<>`, so you can use Rx framework like `System.Reactive`,  
+State implement `IObservable<T>`, so you can use Rx framework like `System.Reactive`,  
 *Note: States does not have a dependency on System.Reactive.*
 
 ```c#
