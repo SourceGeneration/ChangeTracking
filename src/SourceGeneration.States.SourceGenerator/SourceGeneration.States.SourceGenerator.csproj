@@ -16,7 +16,7 @@
 
 		<Version>1.0.0-beta2.240221.2</Version>
 		<Authors>SourceGeneration</Authors>
-		<Description>State management framework with Rx</Description>
+		<Description>States is a state management framework based on Source Generator and Reactive (RX) with no emissions, and it supports AOT compilation.</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/States</RepositoryUrl>
 
 		<IsPackable>true</IsPackable>
