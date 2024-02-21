@@ -278,6 +278,7 @@ services.AddState<GoodsState>(ServiceLifetime.Singleton);
 services.AddState<GoodsState>(ServiceLifetime.Scoped);
 ```
 
+**Inject state into component**
 ```c#
 @inject IScopedState<MyState> State
 @implements IDisposable
