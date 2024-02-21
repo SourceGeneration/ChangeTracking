@@ -21,4 +21,8 @@
     <ProjectReference Include="..\SourceGeneration.States\SourceGeneration.States.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="States\" />
+  </ItemGroup>
+
 </Project>
