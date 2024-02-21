@@ -228,7 +228,7 @@ States can integrated with `Blazor`, and supports `AOT` compilation, more inform
 
 
 ```c#
-@inject State<MyState> State
+@inject IState<MyState> State
 
 <h1>Count: @Count</h1>
 
@@ -246,6 +246,11 @@ States can integrated with `Blazor`, and supports `AOT` compilation, more inform
     private void Click()
     {
         State.Update(x => x.Count++);
+    }
+
+    public void Dispose()
+    {
+        State.Dispose();
     }
 }
 
