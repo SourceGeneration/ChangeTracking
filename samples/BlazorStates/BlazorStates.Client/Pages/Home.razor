@@ -1,7 +1,8 @@
 ﻿@page "/"
 @using SourceGeneration.States
 @using BlazorStates.Client.States
-@inject State<MyState> State
+@inject IScopedState<MyState> State
+@implements IDisposable
 
 <PageTitle>Home</PageTitle>
 
@@ -21,5 +22,10 @@
     private void Click()
     {
         State.Update(x => x.Count++);
+    }
+
+    public void Dispose()
+    {
+        State.Dispose();
     }
 }
