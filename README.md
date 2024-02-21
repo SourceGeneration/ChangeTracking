@@ -228,19 +228,18 @@ States can integrated with `Blazor`, and supports `AOT` compilation, more inform
 
 
 ```c#
-@inject State<MyState> State
+@inject IScopedState<MyState> State
+@implements IDisposable
 
 <h1>Count: @Count</h1>
-
 <button @onclick="Click">Add</button>
 
 @code{
     private int Count;
-    private IDisposable _disposable;
 
     protected override void OnInitialized()
     {
-        _disposable = State.Bind(x => x.Count, x => Count = x);
+        State.Bind(x => x.Count, x => Count = x);
         State.SubscribeBindingChanged(StateHasChanged);
     }
 
@@ -251,8 +250,7 @@ States can integrated with `Blazor`, and supports `AOT` compilation, more inform
 
     public void Dispose()
     {
-        _disposable.Dispose();
+        State.Dispose();
     }
 }
-
 ```
