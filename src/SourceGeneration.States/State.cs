@@ -6,44 +6,67 @@ using System.Runtime.ExceptionServices;
 
 namespace SourceGeneration.States;
 
-public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicConstructors)] TState> : IState<TState>
+public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | DynamicallyAccessedMemberTypes.PublicConstructors)] TState> : IScopedState<TState>
 {
-    private readonly BehaviorSubject<TState> _subject;
+#if DEBUG
+    internal
+#else
+    private
+#endif
+    readonly BehaviorSubject<TState> _subject;
+
     private readonly BehaviorSubject<TState> _afterChange;
-    private readonly WhereSubject<TState> _afterDistinctUtilChange;
+    private readonly WhereSubject<TState> _bindingsUtilChange;
     private readonly TState _value;
 
-    private readonly State<TState>? _parent;
-    private readonly IDisposable? _parentSubscription;
-    private ImmutableList<IChangeTracking> _bindings = ImmutableList.Create<IChangeTracking>();
-    private ImmutableList<IDisposable> _afterUpdateSubscribes = ImmutableList.Create<IDisposable>();
+    private readonly State<TState>? _root;
+    private readonly IDisposable? _rootDisposable;
+
+#if DEBUG
+    internal
+#else
+    private
+#endif
+    ImmutableList<IChangeTracking> _bindings = ImmutableList.Create<IChangeTracking>();
+
+#if DEBUG
+    internal
+#else
+    private
+#endif
+   ImmutableList<IDisposable> _subscriptions = ImmutableList.Create<IDisposable>();
 
     public State(TState state)
     {
         _value = ChangeTrackingProxyFactory.Create(state);
         _subject = new BehaviorSubject<TState>(_value);
         _afterChange = new BehaviorSubject<TState>(_value);
-        _afterDistinctUtilChange = new WhereSubject<TState>(_afterChange, _ => HasBindingChanged());
+        _bindingsUtilChange = new WhereSubject<TState>(_afterChange, _ => HasBindingChanged());
+        IsRoot = true;
         AcceptStateChanges();
     }
 
-    internal State(State<TState> parent)
+    internal State(State<TState> root)
     {
-        _value = parent.Value;
+        _value = root.Value;
         _subject = new BehaviorSubject<TState>(_value);
-        _parent = parent;
-        _afterChange = parent._afterChange;
-        _afterDistinctUtilChange = new WhereSubject<TState>(_afterChange, _ => HasBindingChanged());
-        _parentSubscription = _parent.Subscribe(_subject);
+        _root = root;
+        _afterChange = root._afterChange;
+        _bindingsUtilChange = new WhereSubject<TState>(_afterChange, _ => HasBindingChanged());
+        _rootDisposable = _root.Subscribe(_subject);
+        IsRoot = false;
     }
 
+    public IScopedState<TState> CreateScope() => new State<TState>(this);
+
     public TState Value => _value;
+    public bool IsRoot { get; }
 
     public void Update(Action<TState> action)
     {
         try
         {
-            if (_parent == null)
+            if (_root == null)
             {
                 action(_value);
 
@@ -57,7 +80,7 @@ public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Pu
             }
             else
             {
-                _parent.Update(action);
+                _root.Update(action);
             }
 
             AcceptBindingChanges();
@@ -132,20 +155,22 @@ public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Pu
 
     public IDisposable SubscribeBindingChanged(Action<TState> next)
     {
-        var inner = _afterDistinctUtilChange.Subscribe(next);
+        var inner = _bindingsUtilChange.Subscribe(next);
+
+        AcceptBindingChanges();
 
         Disposable disposable = new(s =>
         {
             inner.Dispose();
-            _afterUpdateSubscribes = _afterUpdateSubscribes.Remove(s);
+            _subscriptions = _subscriptions.Remove(s);
         });
-        _afterUpdateSubscribes = _afterUpdateSubscribes.Add(disposable);
-        return inner;
+        _subscriptions = _subscriptions.Add(disposable);
+        return disposable;
     }
 
     public void Dispose()
     {
-        _afterDistinctUtilChange.Dispose();
+        _bindingsUtilChange.Dispose();
         _subject.Dispose();
 
         var bindings = _bindings;
@@ -154,19 +179,19 @@ public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Pu
             ((IDisposable)binding).Dispose();
         }
 
-        var subscribes = _afterUpdateSubscribes;
+        var subscribes = _subscriptions;
         foreach (var subscribe in subscribes)
         {
             subscribe.Dispose();
         }
 
-        if (_parentSubscription == null)
+        if (_rootDisposable == null)
         {
             _afterChange.Dispose();
         }
         else
         {
-            _parentSubscription.Dispose();
+            _rootDisposable.Dispose();
         }
 
         GC.SuppressFinalize(this);
@@ -208,7 +233,6 @@ public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Pu
 
             _disposable = observable.Subscribe(this);
         }
-
 
         public bool IsChanged => _changed;
 
