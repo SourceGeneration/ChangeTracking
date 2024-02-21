@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.States.svg)](https://www.nuget.org/packages/SourceGeneration.States)
 
-Source generator based state management library without the reflection. You can use Reactive (RX)
+States is a state management framework based on Source Generator and Reactive (RX) with no emissions, and it supports AOT compilation.
 
 ## Installing States
 
@@ -133,8 +133,9 @@ state.Bind(
 state.Update(x => x.Tags[0].Tag = "first tag has modified * 2");
 ```
 
-## Rx Support
-State implement `IObserable<>`, so you can use Rx framework like `System.Reactive`
+## Reactive(Rx) Supports
+State implement `IObserable<>`, so you can use Rx framework like `System.Reactive`,  
+*Note: States does not have a dependency on System.Reactive.*
 
 ```c#
 using System.Reactive.Linq;
@@ -238,28 +239,44 @@ disposable2.Dispose();
 disposable3.Dispose();
 ```
 
-Of course, you can directly destroy the State object
+Of course, you can directly destroy the State object,
+However, in most cases, 
+the lifecycle of `State` needs to be consistent with the user session lifecycle,
+so directly destroying `State` does not align with the application scenario.
 
 ```c#
+state.Dispose();
 ```
 
-Invoke `CreateScope` method to create a scoped state
+To facilitate management, you can create an `IScopedState` by calling the `CreateScope` method.
+In dependency injection, whether it is `ServiceLifetime.Singleton` or `ServiceLifetime.Scoped`, IScopedState is always `Transient`. `IScopedState` is more like a state view.
 
 ```c#
 State<Goods> state = new(new Goods());
 Assert.IsTrue(state.IsRoot);
 
-using IScopedState<GoodsState> scopedState = State.CreateScope();
+IScopedState<GoodsState> scopedState = State.CreateScope();
 Assert.IsFalse(scoped.IsRoot);
 // bind or update
-```
-In dependency injection, whether it is `ServiceLifetime.Singleton` or `ServiceLifetime.Scoped`, IScopedState is always `Transient`.
 
+scopedState.Dispose();
+```
 
 ## Blazor
 
-States can integrated with `Blazor`, and supports `AOT` compilation, more information see [`Blux`](https://github.com/SourceGeneration/Blux) repo
+You can use `States` in `Blazor`, it supports `AOT` compilation
 
+**WebAssembly or Hybird**
+
+```c#
+services.AddState<GoodsState>(ServiceLifetime.Singleton);
+```
+
+**Server**
+
+```c#
+services.AddState<GoodsState>(ServiceLifetime.Scoped);
+```
 
 ```c#
 @inject IScopedState<MyState> State
@@ -287,4 +304,29 @@ States can integrated with `Blazor`, and supports `AOT` compilation, more inform
         State.Dispose();
     }
 }
+```
+
+You can use the Blux library to simplify this process, more information see [**Blux**](https://github.com/SourceGeneration/Blux) repo
+
+```c#
+@inherits BluxComponentBase
+@inject IScopedState<MyState> State
+
+<h1>Count: @Count</h1>
+<button @onclick="Click">Add</button>
+
+@code{
+    private int Count;
+
+    protected override void OnStateBinding()
+    {
+        State.Bind(x => x.Count, x => Count = x);
+    }
+
+    private void Click()
+    {
+        State.Update(x => x.Count++);
+    }
+}
+
 ```
