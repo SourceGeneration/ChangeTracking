@@ -97,15 +97,15 @@ public class StateInjectSourceGenerator : IIncrementalGenerator
 
         if (attribute.ConstructorArguments.Length == 0)
         {
-            return $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>();";
+            return $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.AddState<{state}>();";
         }
         else if (attribute.ConstructorArguments.Length == 1)
         {
             return (int)attribute.ConstructorArguments[0].Value! switch
             {
-                0 => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton);",
-                1 => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped);",
-                _ => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.Add<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient);",
+                0 => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.AddState<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton);",
+                1 => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.AddState<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped);",
+                _ => $"global::{RootNamespace}.SourceGenerationStateServiceCollectionExtensions.AddState<{state}>(global::Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient);",
             };
         }
 
