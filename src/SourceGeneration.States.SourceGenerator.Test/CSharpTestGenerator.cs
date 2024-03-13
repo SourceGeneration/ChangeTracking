@@ -63,7 +63,7 @@ public static class CSharpTestGenerator
 
         var compilation = CSharpCompilation.Create(
             "compilation",
-            new SyntaxTree[] { CSharpSyntaxTree.ParseText(source) },
+            [CSharpSyntaxTree.ParseText(source)],
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
         );
