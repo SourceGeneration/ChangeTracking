@@ -76,9 +76,6 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             var typeProxy = CreateProxy(typeSymbol, cancellationToken);
 
-            //if (typeProxy.Properties.Count == 0)
-            //    return;
-
             var root = (CompilationUnitSyntax)type.SyntaxTree.GetRoot();
 
             CSharpCodeBuilder builder = new();
@@ -105,6 +102,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
     {
         var typekind = typeProxy.IsRecord ? "record" : "class";
 
+        builder.AppendEditorBrowsableNeverAttribute();
         builder.AppendBlock($"internal partial {typekind} {typeProxy.Name}__Proxy__ : {typeFullName}, global::{RootNamespace}.ICascadingChangeTracking, global::System.ComponentModel.INotifyPropertyChanged", () =>
         {
             builder.AppendLine("[global::System.Runtime.CompilerServices.ModuleInitializer]");
@@ -148,15 +146,6 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                             builder.AppendLine($"base.{property.PropertyName} = source.{property.PropertyName};");
                         }
                     }
-
-                    //if (property.IsVirtual)
-                    //{
-                    //    builder.AppendLine($"this.__Set__{property.PropertyName}(source.{property.PropertyName});");
-                    //}
-                    //else
-                    //{
-                    //    builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
-                    //}
                 }
             });
             builder.AppendLine();
@@ -166,18 +155,23 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 builder.AppendLine("this.__baseChanged = true;");
                 builder.AppendLine("this.PropertyChanged?.Invoke(this, new global::System.ComponentModel.PropertyChangedEventArgs(propertyName));");
             });
+
             builder.AppendLine();
+            
             builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
             {
                 builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("this.PropertyChanged?.Invoke(sender, e);");
             });
+            
             builder.AppendLine();
+            
             builder.AppendBlock("private void OnCollectionChanged(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
             {
                 builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("CollectionChanged?.Invoke(sender, e);");
             });
+            
             builder.AppendLine();
 
             builder.AppendBlock($"public void AcceptChanges()", () =>
@@ -192,6 +186,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                     }
                 });
             });
+            
             builder.AppendLine();
 
             foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
@@ -209,15 +204,6 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 });
                 builder.AppendLine();
             }
-
-            //foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
-            //{
-            //    builder.AppendBlock($"private void __Set__{property.PropertyName}({property.Type} value)", () =>
-            //    {
-            //        EmitSetMethod(builder, property);
-            //    });
-            //}
-
         });
     }
 
