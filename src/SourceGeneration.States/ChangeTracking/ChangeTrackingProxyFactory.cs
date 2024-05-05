@@ -19,6 +19,9 @@ public static class ChangeTrackingProxyFactory
         if (model == null)
             return default!;
 
+        if (model is IChangeTracking)
+            return model;
+
         if (_proxies.TryGetValue(typeof(T), out var func))
         {
             T value = (T)func(model!);
