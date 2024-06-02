@@ -62,13 +62,19 @@ public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Pu
     public TState Value => _value;
     public bool IsRoot { get; }
 
-    public void Update(Action<TState> action)
+    public void Update(Action<TState>? action = null)
     {
         try
         {
             if (_root == null)
             {
-                action(_value);
+                action?.Invoke(_value);
+
+                if (_value is IChangeTracking tacking)
+                {
+                    if (!tacking.IsChanged)
+                        return;
+                }
 
                 if (!_subject.IsDisposed)
                 {
@@ -129,7 +135,7 @@ public class State<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Pu
     public IDisposable Bind<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue> subscriber, IEqualityComparer<TValue> equalityComparer)
     {
         BehaviorSubject<TValue> observable;
-        if(predicate == null)
+        if (predicate == null)
         {
             observable = new SelectSubject<TState, TValue>(_subject, selector);
         }
