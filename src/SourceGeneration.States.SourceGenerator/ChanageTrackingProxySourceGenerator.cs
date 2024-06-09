@@ -103,7 +103,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
         var typekind = typeProxy.IsRecord ? "record" : "class";
 
         builder.AppendEditorBrowsableNeverAttribute();
-        builder.AppendBlock($"internal partial {typekind} {typeProxy.Name}__Proxy__ : {typeFullName}, global::{RootNamespace}.ICascadingChangeTracking, global::System.ComponentModel.INotifyPropertyChanged", () =>
+        builder.AppendBlock($"internal partial {typekind} {typeProxy.Name}__Proxy__ : {typeFullName}, global::{RootNamespace}.ICascadingChangeTracking, global::System.ComponentModel.INotifyPropertyChanged, global::System.Collections.Specialized.INotifyCollectionChanged", () =>
         {
             builder.AppendLine("[global::System.Runtime.CompilerServices.ModuleInitializer]");
             builder.AppendBlock("public static void __Initialize()", () =>
@@ -157,21 +157,21 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             });
 
             builder.AppendLine();
-            
+
             builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
             {
                 builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("this.PropertyChanged?.Invoke(sender, e);");
             });
-            
+
             builder.AppendLine();
-            
+
             builder.AppendBlock("private void OnCollectionChanged(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
             {
                 builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("CollectionChanged?.Invoke(sender, e);");
             });
-            
+
             builder.AppendLine();
 
             builder.AppendBlock($"public void AcceptChanges()", () =>
@@ -186,7 +186,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                     }
                 });
             });
-            
+
             builder.AppendLine();
 
             foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
@@ -247,7 +247,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             builder.AppendLine($"this.OnPropertyChanged(\"{property.PropertyName}\");");
         });
-        if(property.Kind == TypeProxyKind.Collection)
+        if (property.Kind == TypeProxyKind.Collection)
         {
             builder.AppendBlock("else if (value is not null && value is not global::System.ComponentModel.IChangeTracking)", () =>
             {
@@ -354,40 +354,54 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 }
             }
 
-            bool notifyPropertyChanged = false;
-            bool notifyCollectionChanged = false;
-            bool changeTracking = false;
-
-            foreach (var @interface in type.AllInterfaces)
-            {
-                var fullName = @interface.GetFullName();
-
-                if (fullName == "global::System.ComponentModel.INotifyPropertyChanged")
-                {
-                    notifyPropertyChanged = true;
-                }
-                else if (fullName == "global::System.Collections.Specialized.INotifyCollectionChanged")
-                {
-                    notifyCollectionChanged = true;
-                }
-                else if (fullName == "global::System.ComponentModel.IChangeTracking")
-                {
-                    changeTracking = true;
-                }
-
-                if (notifyPropertyChanged && notifyCollectionChanged)
-                    break;
-            }
-
             var proxiable = type.HasAttribute(ChangeTrackingAttribute);
 
-            return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
+            if (proxiable)
             {
-                IsInitOnly = property.SetMethod?.IsInitOnly == true,
-                NotifyCollectionChanged = notifyCollectionChanged,
-                NotifyPropertyChanged = notifyPropertyChanged || proxiable,
-                ChangeTracking = changeTracking || proxiable,
-            };
+                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
+                {
+                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                    NotifyCollectionChanged = true,
+                    NotifyPropertyChanged = true,
+                    ChangeTracking = true,
+                };
+            }
+            else
+            {
+                bool notifyPropertyChanged = false;
+                bool notifyCollectionChanged = false;
+                bool changeTracking = false;
+
+                foreach (var @interface in type.AllInterfaces)
+                {
+                    var fullName = @interface.GetFullName();
+
+                    if (fullName == "global::System.ComponentModel.INotifyPropertyChanged")
+                    {
+                        notifyPropertyChanged = true;
+                    }
+                    else if (fullName == "global::System.Collections.Specialized.INotifyCollectionChanged")
+                    {
+                        notifyCollectionChanged = true;
+                    }
+                    else if (fullName == "global::System.ComponentModel.IChangeTracking")
+                    {
+                        changeTracking = true;
+                    }
+
+                    if (notifyPropertyChanged && notifyCollectionChanged)
+                        break;
+                }
+
+
+                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
+                {
+                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                    NotifyCollectionChanged = notifyCollectionChanged,
+                    NotifyPropertyChanged = notifyPropertyChanged,
+                    ChangeTracking = changeTracking,
+                };
+            }
         }
     }
 
