@@ -18,12 +18,14 @@ public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking
 
     protected void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
+        if (_cascadingChanged) return;
         _cascadingChanged = true;
         PropertyChanged?.Invoke(sender, args);
     }
 
     protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
     {
+        if (_cascadingChanged) return;
         _cascadingChanged = true;
         CollectionChanged?.Invoke(sender, args);
     }
