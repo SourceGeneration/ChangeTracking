@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace SourceGeneration.ChangeTracking;
 
-public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBase<TValue>, IDictionary<TKey, TValue> where TKey : notnull
+public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingObjectBase, IDictionary<TKey, TValue> where TKey : notnull
 {
     private Dictionary<TKey, TValue> _dictionary = [];
 
@@ -28,13 +28,14 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
             _dictionary.TryGetValue(key, out var original);
             if (!Equals(original, value))
             {
-                TryRemoveNotifyEventSubscription(original);
+                RemoveNotifyEventSubscription(original);
 
-                _dictionary[key] = value;
-                TryAddNotifyEventSubscription(value);
+                var newItem = ChangeTrackingProxyFactory.Create(value);
+                _dictionary[key] = newItem;
+                AddNotifyEventSubscription(newItem);
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(
                     NotifyCollectionChangedAction.Replace,
-                    new KeyValuePair<TKey, TValue>(key, value),
+                    new KeyValuePair<TKey, TValue>(key, newItem),
                     new KeyValuePair<TKey, TValue>(key, original!),
                     -1));
             }
@@ -43,10 +44,11 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
 
     public void Add(TKey key, TValue value)
     {
-        _dictionary.Add(key, value);
+        var newItem = ChangeTrackingProxyFactory.Create(value);
+        _dictionary.Add(key, newItem);
         _dictionary = new Dictionary<TKey, TValue>(_dictionary);
-        TryAddNotifyEventSubscription(value);
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new KeyValuePair<TKey, TValue>(key, value)));
+        AddNotifyEventSubscription(newItem);
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, new KeyValuePair<TKey, TValue>(key, newItem)));
     }
 
     public void Add(KeyValuePair<TKey, TValue> item) => Add(item.Key, item.Value);
@@ -57,7 +59,7 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
         {
             _dictionary.Remove(key);
             _dictionary = new Dictionary<TKey, TValue>(_dictionary);
-            TryRemoveNotifyEventSubscription(value);
+            RemoveNotifyEventSubscription(value);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, new KeyValuePair<TKey, TValue>(key, value)));
             return true;
         }
@@ -69,7 +71,7 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
         if (_dictionary.Remove(item.Key))
         {
             _dictionary = new Dictionary<TKey, TValue>(_dictionary);
-            TryRemoveNotifyEventSubscription(item.Value);
+            RemoveNotifyEventSubscription(item.Value);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
             return true;
         }
@@ -80,7 +82,7 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
     {
         foreach (var item in _dictionary.Values)
         {
-            TryRemoveNotifyEventSubscription(item);
+            RemoveNotifyEventSubscription(item);
         }
 
         _dictionary.Clear();
@@ -94,7 +96,7 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
 
     public int Count => _dictionary.Count;
 
-    public bool IsReadOnly => ((IDictionary<TKey, TValue>)_dictionary).IsReadOnly;
+    public bool IsReadOnly => false;
 
     public bool Contains(KeyValuePair<TKey, TValue> item) => ((IDictionary<TKey, TValue>)_dictionary).Contains(item);
 
@@ -110,7 +112,7 @@ public class ChangeTrackingDictionary<TKey, TValue> : ChangeTrackingCollectionBa
     public bool TryGetValue(TKey key, out TValue value) => _dictionary.TryGetValue(key, out value);
 #endif
 
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_dictionary).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _dictionary.GetEnumerator();
 
     public override void AcceptChanges()
     {

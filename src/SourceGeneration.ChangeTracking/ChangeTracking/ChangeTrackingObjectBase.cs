@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SourceGeneration.ChangeTracking;
 
-public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking, INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
+public abstract class ChangeTrackingObjectBase : ICascadingChangeTracking, INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
 {
     protected bool _cascadingChanged;
     protected bool _baseChanged;
@@ -24,23 +24,29 @@ public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking
 
     protected void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
+        if (_cascadingChanged) return;
+
         _cascadingChanged = true;
         PropertyChanged?.Invoke(sender, args);
     }
 
     protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
     {
+        if (_cascadingChanged) return;
+
         _cascadingChanged = true;
         CollectionChanged?.Invoke(sender, args);
     }
 
     protected void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
     {
+        if (_baseChanged) return;
+
         _baseChanged = true;
         CollectionChanged?.Invoke(this, args);
     }
 
-    protected void TryAddNotifyEventSubscription(T? item)
+    protected void AddNotifyEventSubscription(object? item)
     {
         if (item is null)
         {
@@ -63,7 +69,7 @@ public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking
         }
     }
 
-    protected void TryRemoveNotifyEventSubscription(T? item)
+    protected void RemoveNotifyEventSubscription(object? item)
     {
         if (item is null)
         {
@@ -85,4 +91,6 @@ public abstract class ChangeTrackingCollectionBase<T> : ICascadingChangeTracking
             notify3.CollectionChanged -= OnCollectionChanged;
         }
     }
+
+
 }

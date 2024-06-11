@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace SourceGeneration.ChangeTracking;
 
-public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
+public class ChangeTrackingList<T> : ChangeTrackingObjectBase, IList<T>
 {
     private readonly List<T> _list = [];
 
@@ -14,10 +14,7 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
     {
         if (list != null)
         {
-            foreach (var item in list)
-            {
-                Add(item);
-            }
+            AddRange(list);
         }
     }
 
@@ -29,40 +26,43 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
             var original = _list[index];
             if (!Equals(original, value))
             {
-                TryRemoveNotifyEventSubscription(original);
-                _list[index] = value;
-                TryAddNotifyEventSubscription(value);
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, original, index));
+                RemoveNotifyEventSubscription(original);
+                var newItem = ChangeTrackingProxyFactory.Create(value);
+                _list[index] = newItem;
+                AddNotifyEventSubscription(newItem);
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem, original, index));
             }
         }
     }
 
-    public int Count => ((ICollection<T>)_list).Count;
+    public int Count => _list.Count;
 
-    public bool IsReadOnly => ((ICollection<T>)_list).IsReadOnly;
+    public bool IsReadOnly => false;
 
     public void Add(T item)
     {
-        _list.Add(item);
-        TryAddNotifyEventSubscription(item);
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
+        var newItem = ChangeTrackingProxyFactory.Create(item);
+        _list.Add(newItem);
+        AddNotifyEventSubscription(newItem);
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem));
     }
 
     public void AddRange(IEnumerable<T> items)
     {
-        foreach (var item in items)
+        var newItems = items.Select(x => ChangeTrackingProxyFactory.Create(x)).ToList();
+        foreach (var newItem in newItems)
         {
-            _list.Add(item);
-            TryAddNotifyEventSubscription(item);
+            _list.Add(newItem);
+            AddNotifyEventSubscription(newItem);
         }
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items));
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems));
     }
 
     public void Clear()
     {
         foreach (var item in _list)
         {
-            TryRemoveNotifyEventSubscription(item);
+            RemoveNotifyEventSubscription(item);
         }
 
         _list.Clear();
@@ -71,28 +71,29 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
 
     public void Insert(int index, T item)
     {
-        _list.Insert(index, item);
-        TryAddNotifyEventSubscription(item);
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+        var newItem = ChangeTrackingProxyFactory.Create(item);
+        _list.Insert(index, newItem);
+        AddNotifyEventSubscription(newItem);
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItem, index));
     }
 
     public void InsertRange(int index, IEnumerable<T> items)
     {
-        var array = items.ToArray();
-        for (int i = 0; i < array.Length; i++)
+        var newItems = items.Select(x => ChangeTrackingProxyFactory.Create(x)).ToList();
+        for (int i = 0; i < newItems.Count; i++)
         {
-            T item = array[i];
-            _list.Insert(i + index, item);
-            TryAddNotifyEventSubscription(item);
+            T newItem = newItems[i];
+            _list.Insert(i + index, newItem);
+            AddNotifyEventSubscription(newItem);
         }
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, array, index));
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, newItems, index));
     }
 
     public bool Remove(T item)
     {
         if (_list.Remove(item))
         {
-            TryRemoveNotifyEventSubscription(item);
+            RemoveNotifyEventSubscription(item);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
             return true;
         }
@@ -102,16 +103,16 @@ public class ChangeTrackingList<T> : ChangeTrackingCollectionBase<T>, IList<T>
     public void RemoveAt(int index)
     {
         var item = _list[index];
-        TryRemoveNotifyEventSubscription(item);
+        RemoveNotifyEventSubscription(item);
         _list.RemoveAt(index);
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
     }
 
-    public bool Contains(T item) => ((ICollection<T>)_list).Contains(item);
-    public void CopyTo(T[] array, int arrayIndex) => ((ICollection<T>)_list).CopyTo(array, arrayIndex);
-    public int IndexOf(T item) => ((IList<T>)_list).IndexOf(item);
-    public IEnumerator<T> GetEnumerator() => ((IEnumerable<T>)_list).GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_list).GetEnumerator();
+    public bool Contains(T item) => _list.Contains(item);
+    public void CopyTo(T[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
+    public int IndexOf(T item) => _list.IndexOf(item);
+    public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
 
     public override void AcceptChanges()
     {
