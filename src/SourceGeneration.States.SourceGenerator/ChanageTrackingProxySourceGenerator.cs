@@ -160,6 +160,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
             {
+                builder.AppendLine("if(__cascadingChanged) return;");
                 builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("this.PropertyChanged?.Invoke(sender, e);");
             });
@@ -168,6 +169,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             builder.AppendBlock("private void OnCollectionChanged(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
             {
+                builder.AppendLine("if(__cascadingChanged) return;");
                 builder.AppendLine("this.__cascadingChanged = true;");
                 builder.AppendLine("CollectionChanged?.Invoke(sender, e);");
             });
@@ -281,7 +283,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
         }
         if (property.ChangeTracking)
         {
-            builder.AppendLine($"this.__cascadingChanged = ((global::System.ComponentModel.IChangeTracking)base.{property.PropertyName}).IsChanged;");
+            builder.AppendLine($"this.__cascadingChanged |= ((global::System.ComponentModel.IChangeTracking)base.{property.PropertyName}).IsChanged;");
         }
     }
 
