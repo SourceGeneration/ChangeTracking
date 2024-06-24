@@ -4,6 +4,34 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<LangVersion>12</LangVersion>
+
+		<Version>1.0.0-beta1.240624.1</Version>
+		<Authors>SourceGeneration</Authors>
+		<Description>ChangeTracking is a object change tracking and state management framework based on Source Generator, supports AOT compilation.</Description>
+		<RepositoryUrl>https://github.com/SourceGeneration/ChangeTracking</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/SourceGeneration/ChangeTracking</PackageProjectUrl>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
+		<PackageIcon>sg.png</PackageIcon>
+		<PackageTags>state,change tracking,proerpty changed,collection changed,source generation</PackageTags>
+
 	</PropertyGroup>
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>SourceGeneration.ChangeTracking.Test</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include=".\..\..\sg.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+			<Visible>false</Visible>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\SourceGeneration.ChangeTracking.SourceGenerator\SourceGeneration.ChangeTracking.SourceGenerator.csproj" />
+	</ItemGroup>
 
 </Project>

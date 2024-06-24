@@ -16,6 +16,9 @@ public static class ChangeTrackingProxyFactory
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
+    public static bool HasProxy<T>() => _proxies.ContainsKey(typeof(T));
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static T Create<T>(T model)
     {
         if (model == null)

@@ -14,13 +14,27 @@
 		<AnalyzerLanguage>cs</AnalyzerLanguage>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
+		<Version>1.0.0-beta1.240624.1</Version>
+		<Authors>SourceGeneration</Authors>
+		<Description>ChangeTracking is a object change tracking and state management framework based on Source Generator, supports AOT compilation.</Description>
+		<RepositoryUrl>https://github.com/SourceGeneration/ChangeTracking</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/SourceGeneration/ChangeTracking</PackageProjectUrl>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
+		<PackageIcon>sg.png</PackageIcon>
+		<PackageTags>state,change tracking,proerpty changed,collection changed,source generation</PackageTags>
 	</PropertyGroup>
+	<ItemGroup>
+		<None Include=".\..\..\sg.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+			<Visible>false</Visible>
+		</None>
+	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\SourceGeneration.ChangeTracking\SourceGeneration.ChangeTracking.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0-3.24307.3" PrivateAssets="true" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0-3.24319.7" PrivateAssets="true" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

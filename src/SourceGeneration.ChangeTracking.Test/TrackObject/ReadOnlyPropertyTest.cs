@@ -1,4 +1,4 @@
-﻿namespace SourceGeneration.ChangeTracking.Test;
+﻿namespace SourceGeneration.ChangeTracking.TrackObjects;
 
 [TestClass]
 public class ReadOnlyPropertyTest

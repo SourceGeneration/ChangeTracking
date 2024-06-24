@@ -1,8 +1,40 @@
-namespace SourceGeneration.ChangeTracking.Test;
+namespace SourceGeneration.ChangeTracking.State;
 
 [TestClass]
 public class StateTrackingTest
 {
+    [TestMethod]
+    public void Modify_Watch_Property()
+    {
+        var state = new TestState();
+        bool changed = false;
+
+        var tracker = state.CreateTracker();
+        tracker.Watch(x => x.Value1);
+        tracker.OnChange(() => changed = true);
+
+        state.Value1 = 1;
+        state.AcceptChanges();
+
+        Assert.IsTrue(changed);
+    }
+
+    [TestMethod]
+    public void Modify_Watch_Property_Unchanged()
+    {
+        var state = new TestState();
+        bool changed = false;
+
+        var tracker = state.CreateTracker();
+        tracker.Watch(x => x.Value1);
+        tracker.OnChange(() => changed = true);
+
+        state.Value1 = 0;
+        state.AcceptChanges();
+
+        Assert.IsFalse(changed);
+    }
+
     [TestMethod]
     public void Modify_NotWatch_Property()
     {
@@ -19,21 +51,6 @@ public class StateTrackingTest
         Assert.IsFalse(changed);
     }
 
-    [TestMethod]
-    public void Modify_Watch_Property()
-    {
-        var state = new TestState();
-        bool changed = false;
-
-        var tracker = state.CreateTracker();
-        tracker.Watch(x => x.Value1);
-        tracker.OnChange(() => changed = true);
-
-        state.Value1 = 1;
-        state.AcceptChanges();
-
-        Assert.IsTrue(changed);
-    }
 
     [TestMethod]
     public void Mulit_Tracker()

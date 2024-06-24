@@ -33,7 +33,7 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
         if (_watches.Any(x => x.IsChanged))
         {
-            foreach(var subscriber in _subscribers)
+            foreach (var subscriber in _subscribers)
             {
                 subscriber(State);
             }
@@ -52,21 +52,21 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
     public IDisposable Watch<TValue>(Func<TState, TValue> selector, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        var subscription = new Subscription<TValue>(selector, null, null, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
+        var subscription = new Subscription<TValue>(State, selector, null, null, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
         _watches.Add(subscription);
         return new Disposable(() => _watches.Remove(subscription));
     }
 
     public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        var subscription = new Subscription<TValue>(selector, predicate, null, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
+        var subscription = new Subscription<TValue>(State, selector, predicate, null, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
         _watches.Add(subscription);
         return new Disposable(() => _watches.Remove(subscription));
     }
 
-    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue?>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        var subscription = new Subscription<TValue>(selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
+        var subscription = new Subscription<TValue>(State, selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
         _watches.Add(subscription);
         return new Disposable(() => _watches.Remove(subscription));
     }
@@ -86,14 +86,28 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         _disposeAction?.Invoke(this);
     }
 
-    private sealed class Subscription<TValue>(
-        Func<TState, TValue> selector,
-        Func<TValue, bool>? predicate,
-        Action<TValue>? subscriber,
-        IEqualityComparer<TValue> equalityComparer) : IObserver<TState>, IChangeTracking
+    private sealed class Subscription<TValue> : IObserver<TState>, IChangeTracking
     {
-        private TValue _value = default!;
+        private readonly Func<TState, TValue> _selector;
+        private readonly Func<TValue, bool>? _predicate;
+        private readonly Action<TValue>? _subscriber;
+        private readonly IEqualityComparer<TValue> _equalityComparer;
+        private TValue? _value;
         private bool _changed;
+
+        public Subscription(
+            TState state,
+            Func<TState, TValue> selector,
+            Func<TValue, bool>? predicate,
+            Action<TValue?>? subscriber,
+            IEqualityComparer<TValue> equalityComparer)
+        {
+            _selector = selector;
+            _predicate = predicate;
+            _subscriber = subscriber;
+            _equalityComparer = equalityComparer;
+            SetValue(state);
+        }
 
         public bool IsChanged => _changed;
 
@@ -107,17 +121,26 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
         public void OnNext(TState value)
         {
-            var select = selector(value);
-
-            if (predicate == null || predicate(select))
+            if (SetValue(value))
             {
-                if (!equalityComparer.Equals(_value, select))
+                _changed = true;
+                _subscriber?.Invoke(_value);
+            }
+        }
+
+        private bool SetValue(TState value)
+        {
+            var select = _selector(value);
+
+            if (_predicate == null || _predicate(select))
+            {
+                if (!_equalityComparer.Equals(_value, select))
                 {
                     _value = select;
-                    _changed = true;
-                    subscriber?.Invoke(_value);
+                    return true;
                 }
             }
+            return false;
         }
     }
 

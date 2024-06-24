@@ -1,4 +1,6 @@
-﻿namespace SourceGeneration.ChangeTracking.Test;
+﻿using SourceGeneration.ChangeTracking.Test;
+
+namespace SourceGeneration.ChangeTracking.TrackObjects;
 
 [TestClass]
 public class ListTest
