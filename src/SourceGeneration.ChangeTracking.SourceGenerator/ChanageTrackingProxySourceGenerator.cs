@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -125,8 +126,10 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
             builder.AppendLine("private bool __baseChanged;");
             builder.AppendLine();
 
-            builder.AppendLine("public bool IsChanged => __baseChanged || __cascadingChanged;");
-            builder.AppendLine("public bool IsCascadingChanged => __cascadingChanged;");
+            builder.AppendLine("bool System.ComponentModel.IChangeTracking.IsChanged => __baseChanged || __cascadingChanged;");
+            builder.AppendLine($"bool {RootNamespace}.ICascadingChangeTracking.IsCascadingChanged => __cascadingChanged;");
+            builder.AppendLine();
+
             builder.AppendLine("public event global::System.ComponentModel.PropertyChangedEventHandler PropertyChanged;");
             builder.AppendLine("public event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;");
             builder.AppendLine();
@@ -156,7 +159,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
                 builder.AppendLine("this.__baseChanged = true;");
                 builder.AppendLine("this.PropertyChanged?.Invoke(this, new global::System.ComponentModel.PropertyChangedEventArgs(propertyName));");
             });
-
+            
             builder.AppendLine();
 
             builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
@@ -177,7 +180,7 @@ public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
 
             builder.AppendLine();
 
-            builder.AppendBlock($"public void AcceptChanges()", () =>
+            builder.AppendBlock($"void System.ComponentModel.IChangeTracking.AcceptChanges()", () =>
             {
                 builder.AppendLine("this.__baseChanged = false;");
                 builder.AppendBlock("if (__cascadingChanged)", () =>

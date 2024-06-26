@@ -156,6 +156,7 @@ public class CascadingTrackingTest
         Assert.IsTrue(changed);
     }
 
+
     [TestMethod]
     public void Cascading_Collection_Set_NotChange()
     {
@@ -173,12 +174,39 @@ public class CascadingTrackingTest
         Assert.IsFalse(changed);
     }
 
+    [TestMethod]
+    public void Cascading_ObjectCollection_Add()
+    {
+        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+
+        bool changed = false;
+        int subscribe = 0;
+
+        var tracker = state.CreateTracker();
+        tracker.OnChange(() => changed = true);
+        tracker.Watch(x => x.List, _ => subscribe++, ChangeTrackingScope.Cascading);
+
+        state.List.Add(new CascadingCollectionTestObject());
+        state.AcceptChanges();
+
+        Assert.IsTrue(changed);
+        Assert.AreEqual(2, subscribe);
+
+        changed = false;
+        state.List[0].Value = 2;
+        state.AcceptChanges();
+        Assert.IsTrue(changed);
+        Assert.AreEqual(3, subscribe);
+    }
+
 }
 
 [ChangeTracking]
 public class CascadingTestState : State<CascadingTestState>
 {
     public virtual CascadingCollectionTestObject Object { get; set; } = new();
+
+    public virtual ChangeTrackingList<CascadingCollectionTestObject> List { get; set; } = [];
 }
 
 [ChangeTracking]

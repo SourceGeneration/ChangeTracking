@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Threading.Channels;
+
 namespace SourceGeneration.ChangeTracking.State;
 
 [TestClass]
@@ -76,6 +79,15 @@ public class StateTrackingTest
         changed1 = false;
         state.Value2 = "a";
         state.AcceptChanges();
+        Assert.IsFalse(changed1);
+        Assert.IsTrue(changed2);
+
+        changed1 = false;
+        changed2 = false;
+        state.Value1 = 2;
+        state.Value2 = "b";
+        state.AcceptChanges();
+        Assert.IsTrue(changed1);
         Assert.IsTrue(changed2);
     }
 

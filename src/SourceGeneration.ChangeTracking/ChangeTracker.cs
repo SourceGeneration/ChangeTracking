@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Linq;
 
@@ -7,8 +8,8 @@ namespace SourceGeneration.ChangeTracking;
 
 public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 {
-    private readonly List<IChangeTracking> _watches = [];
-    private readonly List<Action<TState>> _subscribers = [];
+    private ImmutableArray<IChangeTracking> _watches = [];
+    private ImmutableArray<Action<TState>> _subscribers = [];
     private readonly Action<ChangeTracker<TState>>? _disposeAction;
 
     public ChangeTracker(TState state)
@@ -26,63 +27,61 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
     public void AcceptChanges()
     {
-        foreach (var observer in _watches.Cast<IObserver<TState>>())
+        var watches = _watches;
+        foreach (var observer in watches.Cast<IObserver<TState>>())
         {
             observer.OnNext(State);
         }
 
-        if (_watches.Any(x => x.IsChanged))
+        if (watches.Any(x => x.IsChanged))
         {
-            foreach (var subscriber in _subscribers)
+            var subscribes = _subscribers;
+            foreach (var subscriber in subscribes)
             {
                 subscriber(State);
             }
         }
 
-        foreach (IChangeTracking observer in _watches)
+        foreach (IChangeTracking observer in watches)
         {
             observer.AcceptChanges();
-        }
-
-        if (State is IChangeTracking tracking)
-        {
-            tracking.AcceptChanges();
         }
     }
 
     public IDisposable Watch<TValue>(Func<TState, TValue> selector, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        var subscription = new Subscription<TValue>(State, selector, null, null, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
-        _watches.Add(subscription);
-        return new Disposable(() => _watches.Remove(subscription));
+        return Watch(selector, null, null, scope);
+    }
+
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    {
+        return Watch(selector, null, subscriber, scope);
     }
 
     public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
-        var subscription = new Subscription<TValue>(State, selector, predicate, null, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
-        _watches.Add(subscription);
-        return new Disposable(() => _watches.Remove(subscription));
+        return Watch(selector, predicate, null, scope);
     }
 
-    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue?>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
     {
         var subscription = new Subscription<TValue>(State, selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
-        _watches.Add(subscription);
-        return new Disposable(() => _watches.Remove(subscription));
+        _watches = _watches.Add(subscription);
+        return new Disposable(() => _watches = _watches.Remove(subscription));
     }
 
     public IDisposable OnChange(Action subscriber) => OnChange(_ => subscriber());
 
     public IDisposable OnChange(Action<TState> subscriber)
     {
-        _subscribers.Add(subscriber);
-        return new Disposable(() => _subscribers.Remove(subscriber));
+        _subscribers = _subscribers.Add(subscriber);
+        return new Disposable(() => _subscribers = _subscribers.Remove(subscriber));
     }
 
     public void Dispose()
     {
-        _subscribers.Clear();
-        _watches.Clear();
+        _subscribers = _subscribers.Clear();
+        _watches = _watches.Clear();
         _disposeAction?.Invoke(this);
     }
 
@@ -92,21 +91,25 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         private readonly Func<TValue, bool>? _predicate;
         private readonly Action<TValue>? _subscriber;
         private readonly IEqualityComparer<TValue> _equalityComparer;
-        private TValue? _value;
+        private TValue _value = default!;
         private bool _changed;
 
         public Subscription(
             TState state,
             Func<TState, TValue> selector,
             Func<TValue, bool>? predicate,
-            Action<TValue?>? subscriber,
+            Action<TValue>? subscriber,
             IEqualityComparer<TValue> equalityComparer)
         {
             _selector = selector;
             _predicate = predicate;
             _subscriber = subscriber;
             _equalityComparer = equalityComparer;
-            SetValue(state);
+
+            if (SetValue(state))
+            {
+                subscriber?.Invoke(_value);
+            }
         }
 
         public bool IsChanged => _changed;

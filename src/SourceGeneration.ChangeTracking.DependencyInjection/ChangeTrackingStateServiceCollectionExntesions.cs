@@ -4,11 +4,9 @@ namespace SourceGeneration.ChangeTracking;
 
 public static class ChangeTrackingStateServiceCollectionExntesions
 {
-    public static IServiceCollection AddState<T>(this IServiceCollection services, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped) where T : State<T>
+    public static IServiceCollection AddState<T>(this IServiceCollection services, ServiceLifetime serviceLifetime = ServiceLifetime.Scoped) where T : State<T>, new()
     {
-        var type = typeof(T);
-        services.Add(new ServiceDescriptor(type, type, serviceLifetime));
-        services.AddTransient(p => p.GetRequiredService<T>().CreateTracker());
+        services.Add(new ServiceDescriptor(typeof(T), _ => ChangeTrackingProxyFactory.Create(new T()), serviceLifetime));
         return services;
     }
 }

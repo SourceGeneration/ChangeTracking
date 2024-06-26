@@ -1,4 +1,4 @@
-﻿namespace SourceGeneration.ChangeTracking.Test;
+﻿namespace SourceGeneration.ChangeTracking.Tracker;
 
 [TestClass]
 public class ChangeTrackerTest
