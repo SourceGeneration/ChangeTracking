@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace SourceGeneration.ChangeTracking.SourceGenerator.Test;
 
+
 public static class CSharpTestGenerator
 {
     public static GenerationResult Generate<T>(string source, params Assembly[] addReferences) where T : IIncrementalGenerator, new()

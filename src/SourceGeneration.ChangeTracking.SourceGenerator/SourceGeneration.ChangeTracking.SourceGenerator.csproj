@@ -14,7 +14,7 @@
 		<AnalyzerLanguage>cs</AnalyzerLanguage>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
-		<Version>1.0.0-beta1.240626.2</Version>
+		<Version>1.0.0-beta1.240706.1</Version>
 		<Authors>SourceGeneration</Authors>
 		<Description>ChangeTracking is a object change tracking and state management framework based on Source Generator, supports AOT compilation.</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/ChangeTracking</RepositoryUrl>
@@ -34,7 +34,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0-3.24319.7" PrivateAssets="true" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0-3.24352.5" PrivateAssets="true" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
