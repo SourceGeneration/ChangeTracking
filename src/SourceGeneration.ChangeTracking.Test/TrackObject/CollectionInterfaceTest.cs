@@ -9,7 +9,8 @@ public class CollectionInterfaceTest
     [TestMethod]
     public void ValueList_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject());
+        var tracking = new TrackingCollectionObject();
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -30,10 +31,11 @@ public class CollectionInterfaceTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject()
+        var tracking = new TrackingCollectionObject
         {
             ICollectionOfValue = [1]
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -54,11 +56,11 @@ public class CollectionInterfaceTest
     [TestMethod]
     public void ValueList_Clear()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject()
+        var tracking = new TrackingCollectionObject
         {
             ICollectionOfValue = [1]
-        });
-        //tracking.AcceptChanges();
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -79,10 +81,12 @@ public class CollectionInterfaceTest
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingCollectionObject()
+        var tracking = new TrackingCollectionObject
         {
             ICollectionOfObject = [new TrackingObject(), new TrackingObject()]
-        });
+        };
+
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -118,10 +122,14 @@ public class CollectionInterfaceTest
 }
 
 [ChangeTracking]
-public class TrackingCollectionObject
+public partial class TrackingCollectionObject
 {
-
-    public virtual ICollection<int> ICollectionOfValue { get; set; } = [];
-    public virtual ICollection<TrackingObject> ICollectionOfObject { get; set; } = [];
+    public TrackingCollectionObject()
+    {
+        ICollectionOfValue = [];
+        ICollectionOfObject = [];
+    }
+    public partial ICollection<int> ICollectionOfValue { get; set; }
+    public partial ICollection<TrackingObject> ICollectionOfObject { get; set; }
 }
 

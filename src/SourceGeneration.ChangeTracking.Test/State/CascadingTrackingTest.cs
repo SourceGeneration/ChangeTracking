@@ -6,7 +6,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Root_Value_Change()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -23,7 +23,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_Value_Change()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -40,7 +40,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_Value_NotChange()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -57,7 +57,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Root_Collection_Add()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -74,7 +74,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Root_Collection_Set()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -91,7 +91,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Root_Collection_Remove()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -108,7 +108,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_Collection_Add()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -125,7 +125,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_Collection_Remove()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -142,7 +142,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_Collection_Set()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -160,7 +160,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_Collection_Set_NotChange()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
 
@@ -177,7 +177,7 @@ public class CascadingTrackingTest
     [TestMethod]
     public void Cascading_ObjectCollection_Add()
     {
-        var state = ChangeTrackingProxyFactory.Create(new CascadingTestState());
+        var state = new CascadingTestState();
 
         bool changed = false;
         int subscribe = 0;
@@ -198,21 +198,32 @@ public class CascadingTrackingTest
         Assert.IsTrue(changed);
         Assert.AreEqual(3, subscribe);
     }
-
 }
 
 [ChangeTracking]
-public class CascadingTestState : State<CascadingTestState>
+public partial class CascadingTestState : State<CascadingTestState>
 {
-    public virtual CascadingCollectionTestObject Object { get; set; } = new();
+    public CascadingTestState()
+    {
+        Object = new();
+        List = [];
+        __AcceptChanges();
+    }
 
-    public virtual ChangeTrackingList<CascadingCollectionTestObject> List { get; set; } = [];
+    public partial CascadingCollectionTestObject Object { get; set; }
+
+    public partial ChangeTrackingList<CascadingCollectionTestObject> List { get; set; }
 }
 
 [ChangeTracking]
-public class CascadingCollectionTestObject
+public partial class CascadingCollectionTestObject
 {
-    public virtual int Value { get; set; }
-    public virtual ChangeTrackingList<int> List { get; set; } = [0];
+    public CascadingCollectionTestObject()
+    {
+        List = [0];
+    }
+
+    public partial int Value { get; set; }
+    public partial ChangeTrackingList<int> List { get; set; } 
 }
 

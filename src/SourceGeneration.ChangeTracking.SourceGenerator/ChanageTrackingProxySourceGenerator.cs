@@ -1,448 +1,448 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+﻿//using Microsoft.CodeAnalysis;
+//using Microsoft.CodeAnalysis.CSharp.Syntax;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
+//using System.Threading;
 
-namespace SourceGeneration.ChangeTracking.SourceGenerator;
+//namespace SourceGeneration.ChangeTracking.SourceGenerator;
 
-[Generator(LanguageNames.CSharp)]
-public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
-{
-    public const string RootNamespace = "SourceGeneration.ChangeTracking";
+//[Generator(LanguageNames.CSharp)]
+//public partial class ChanageTrackingProxySourceGenerator : IIncrementalGenerator
+//{
+//    public const string RootNamespace = "SourceGeneration.ChangeTracking";
 
-    public const string ChangeTrackingAttribute = $"{RootNamespace}.ChangeTrackingAttribute";
+//    public const string ChangeTrackingAttribute = $"{RootNamespace}.ChangeTrackingAttribute";
 
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-        var methodDeclarations = context.SyntaxProvider.ForAttributeWithMetadataName(
-            ChangeTrackingAttribute,
-            predicate: static (node, token) =>
-            {
-                if (node is not TypeDeclarationSyntax type
-                    //|| type.IsPartial()
-                    || type.IsAbstract()
-                    || type.TypeParameterList != null)
-                {
-                    return false;
-                }
+//    public void Initialize(IncrementalGeneratorInitializationContext context)
+//    {
+//        var methodDeclarations = context.SyntaxProvider.ForAttributeWithMetadataName(
+//            ChangeTrackingAttribute,
+//            predicate: static (node, token) =>
+//            {
+//                if (node is not TypeDeclarationSyntax type
+//                    //|| type.IsPartial()
+//                    || type.IsAbstract()
+//                    || type.TypeParameterList != null)
+//                {
+//                    return false;
+//                }
 
-                if (!type.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ClassDeclaration) &&
-                    !type.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.RecordDeclaration))
-                {
-                    return false;
-                }
+//                if (!type.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ClassDeclaration) &&
+//                    !type.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.RecordDeclaration))
+//                {
+//                    return false;
+//                }
 
-                //如果是内部类，需要确保父级都是 class，record 且为 partial
-                //var parent = type.Parent;
-                //while (parent != null)
-                //{
-                //    if (parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax)
-                //        break;
+//                //如果是内部类，需要确保父级都是 class，record 且为 partial
+//                //var parent = type.Parent;
+//                //while (parent != null)
+//                //{
+//                //    if (parent is BaseNamespaceDeclarationSyntax or CompilationUnitSyntax)
+//                //        break;
 
-                //    if (parent is not TypeDeclarationSyntax tp)
-                //        return false;
+//                //    if (parent is not TypeDeclarationSyntax tp)
+//                //        return false;
 
-                //    if (!tp.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ClassDeclaration) &&
-                //        !tp.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.RecordDeclaration))
-                //    {
-                //        return false;
-                //    }
+//                //    if (!tp.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ClassDeclaration) &&
+//                //        !tp.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.RecordDeclaration))
+//                //    {
+//                //        return false;
+//                //    }
 
-                //    if (!tp.IsPartial() || tp.TypeParameterList != null)
-                //        return false;
+//                //    if (!tp.IsPartial() || tp.TypeParameterList != null)
+//                //        return false;
 
-                //    parent = parent.Parent;
-                //}
+//                //    parent = parent.Parent;
+//                //}
 
-                return true;
-            },
-            transform: static (context, token) =>
-            {
-                return (TypeDeclarationSyntax)context.TargetNode;
-            });
+//                return true;
+//            },
+//            transform: static (context, token) =>
+//            {
+//                return (TypeDeclarationSyntax)context.TargetNode;
+//            });
 
-        var source = methodDeclarations.Combine(context.CompilationProvider);
+//        var source = methodDeclarations.Combine(context.CompilationProvider);
 
-        context.RegisterSourceOutput(source, static (sourceContext, source) =>
-        {
-            CancellationToken cancellationToken = sourceContext.CancellationToken;
-            TypeDeclarationSyntax type = source.Left;
-            Compilation compilation = source.Right;
+//        context.RegisterSourceOutput(source, static (sourceContext, source) =>
+//        {
+//            CancellationToken cancellationToken = sourceContext.CancellationToken;
+//            TypeDeclarationSyntax type = source.Left;
+//            Compilation compilation = source.Right;
 
-            SemanticModel model = compilation.GetSemanticModel(type.SyntaxTree);
-            var typeSymbol = (INamedTypeSymbol)model.GetDeclaredSymbol(type, cancellationToken)!;
+//            SemanticModel model = compilation.GetSemanticModel(type.SyntaxTree);
+//            var typeSymbol = (INamedTypeSymbol)model.GetDeclaredSymbol(type, cancellationToken)!;
 
-            var typeProxy = CreateProxy(typeSymbol, cancellationToken);
+//            var typeProxy = CreateProxy(typeSymbol, cancellationToken);
 
-            var root = (CompilationUnitSyntax)type.SyntaxTree.GetRoot();
+//            var root = (CompilationUnitSyntax)type.SyntaxTree.GetRoot();
 
-            CSharpCodeBuilder builder = new();
-            builder.AppendAutoGeneratedComment();
+//            CSharpCodeBuilder builder = new();
+//            builder.AppendAutoGeneratedComment();
 
-            if (typeProxy.Namespace == null)
-            {
-                CreateSource(typeSymbol.GetFullName(), typeProxy, builder);
-            }
-            else
-            {
-                builder.AppendBlock($"namespace {typeProxy.Namespace}", () =>
-                {
-                    CreateSource(typeSymbol.GetFullName(), typeProxy, builder);
-                });
-            }
+//            if (typeProxy.Namespace == null)
+//            {
+//                CreateSource(typeSymbol.GetFullName(), typeProxy, builder);
+//            }
+//            else
+//            {
+//                builder.AppendBlock($"namespace {typeProxy.Namespace}", () =>
+//                {
+//                    CreateSource(typeSymbol.GetFullName(), typeProxy, builder);
+//                });
+//            }
 
-            var code = builder.ToString();
-            sourceContext.AddSource($"{typeSymbol.GetFullName(false)}.ChangeTackingProxy.g.cs", code);
-        });
-    }
+//            var code = builder.ToString();
+//            sourceContext.AddSource($"{typeSymbol.GetFullName(false)}.ChangeTackingProxy.g.cs", code);
+//        });
+//    }
 
-    private static void CreateSource(string typeFullName, TypeDefinition typeProxy, CSharpCodeBuilder builder)
-    {
-        var typekind = typeProxy.IsRecord ? "record" : "class";
+//    private static void CreateSource(string typeFullName, TypeDefinition typeProxy, CSharpCodeBuilder builder)
+//    {
+//        var typekind = typeProxy.IsRecord ? "record" : "class";
 
-        builder.AppendEditorBrowsableNeverAttribute();
-        builder.AppendBlock($"internal partial {typekind} {typeProxy.Name}__Proxy__ : {typeFullName}, global::{RootNamespace}.ICascadingChangeTracking, global::System.ComponentModel.INotifyPropertyChanged, global::System.Collections.Specialized.INotifyCollectionChanged", () =>
-        {
-            builder.AppendLine("[global::System.Runtime.CompilerServices.ModuleInitializer]");
-            builder.AppendBlock("public static void __Initialize()", () =>
-            {
-                var requires = typeProxy.Properties.Where(x => x.Required || x.IsInitOnly).Select(x => $"{x.PropertyName} = x.{x.PropertyName}").ToList();
-                if (requires.Count > 0)
-                {
-                    string initProperties = "{ " + string.Join(", ", requires) + " }";
-                    builder.AppendLine($"global::{RootNamespace}.ChangeTrackingProxyFactory.Register<{typeFullName}>(x => new {typeProxy.Name}__Proxy__(x) {initProperties} );");
-                }
-                else
-                {
-                    builder.AppendLine($"global::{RootNamespace}.ChangeTrackingProxyFactory.Register<{typeFullName}>(x => new {typeProxy.Name}__Proxy__(x));");
-                }
-            });
-            builder.AppendLine();
+//        builder.AppendEditorBrowsableNeverAttribute();
+//        builder.AppendBlock($"internal partial {typekind} {typeProxy.Name}__Proxy__ : {typeFullName}, global::{RootNamespace}.ICascadingChangeTracking, global::System.ComponentModel.INotifyPropertyChanged, global::System.Collections.Specialized.INotifyCollectionChanged", () =>
+//        {
+//            builder.AppendLine("[global::System.Runtime.CompilerServices.ModuleInitializer]");
+//            builder.AppendBlock("public static void __Initialize()", () =>
+//            {
+//                var requires = typeProxy.Properties.Where(x => x.Required || x.IsInitOnly).Select(x => $"{x.PropertyName} = x.{x.PropertyName}").ToList();
+//                if (requires.Count > 0)
+//                {
+//                    string initProperties = "{ " + string.Join(", ", requires) + " }";
+//                    builder.AppendLine($"global::{RootNamespace}.ChangeTrackingProxyFactory.Register<{typeFullName}>(x => new {typeProxy.Name}__Proxy__(x) {initProperties} );");
+//                }
+//                else
+//                {
+//                    builder.AppendLine($"global::{RootNamespace}.ChangeTrackingProxyFactory.Register<{typeFullName}>(x => new {typeProxy.Name}__Proxy__(x));");
+//                }
+//            });
+//            builder.AppendLine();
 
-            builder.AppendLine("private bool __cascadingChanged;");
-            builder.AppendLine("private bool __baseChanged;");
-            builder.AppendLine();
+//            builder.AppendLine("private bool __cascadingChanged;");
+//            builder.AppendLine("private bool __baseChanged;");
+//            builder.AppendLine();
 
-            builder.AppendLine("bool System.ComponentModel.IChangeTracking.IsChanged => __baseChanged || __cascadingChanged;");
-            builder.AppendLine($"bool {RootNamespace}.ICascadingChangeTracking.IsCascadingChanged => __cascadingChanged;");
-            builder.AppendLine();
+//            builder.AppendLine("bool System.ComponentModel.IChangeTracking.IsChanged => __baseChanged || __cascadingChanged;");
+//            builder.AppendLine($"bool {RootNamespace}.ICascadingChangeTracking.IsCascadingChanged => __cascadingChanged;");
+//            builder.AppendLine();
 
-            builder.AppendLine("public event global::System.ComponentModel.PropertyChangedEventHandler PropertyChanged;");
-            builder.AppendLine("public event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;");
-            builder.AppendLine();
+//            builder.AppendLine("public event global::System.ComponentModel.PropertyChangedEventHandler PropertyChanged;");
+//            builder.AppendLine("public event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged;");
+//            builder.AppendLine();
 
-            builder.AppendBlock($"public {typeProxy.Name}__Proxy__({typeFullName} source)", () =>
-            {
-                foreach (var property in typeProxy.Properties)
-                {
-                    if (!property.IsInitOnly && !property.Required)
-                    {
-                        if (property.IsVirtual)
-                        {
-                            builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
-                        }
-                        else
-                        {
-                            builder.AppendLine($"base.{property.PropertyName} = source.{property.PropertyName};");
-                        }
-                    }
-                }
-            });
-            builder.AppendLine();
+//            builder.AppendBlock($"public {typeProxy.Name}__Proxy__({typeFullName} source)", () =>
+//            {
+//                foreach (var property in typeProxy.Properties)
+//                {
+//                    if (!property.IsInitOnly && !property.Required)
+//                    {
+//                        if (property.IsVirtual)
+//                        {
+//                            builder.AppendLine($"this.{property.PropertyName} = source.{property.PropertyName};");
+//                        }
+//                        else
+//                        {
+//                            builder.AppendLine($"base.{property.PropertyName} = source.{property.PropertyName};");
+//                        }
+//                    }
+//                }
+//            });
+//            builder.AppendLine();
 
-            builder.AppendBlock("private void OnPropertyChanged(string propertyName)", () =>
-            {
-                builder.AppendLine("if(__baseChanged) return;");
-                builder.AppendLine("this.__baseChanged = true;");
-                builder.AppendLine("this.PropertyChanged?.Invoke(this, new global::System.ComponentModel.PropertyChangedEventArgs(propertyName));");
-            });
+//            builder.AppendBlock("private void OnPropertyChanged(string propertyName)", () =>
+//            {
+//                builder.AppendLine("if(__baseChanged) return;");
+//                builder.AppendLine("this.__baseChanged = true;");
+//                builder.AppendLine("this.PropertyChanged?.Invoke(this, new global::System.ComponentModel.PropertyChangedEventArgs(propertyName));");
+//            });
             
-            builder.AppendLine();
+//            builder.AppendLine();
 
-            builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
-            {
-                builder.AppendLine("if(__cascadingChanged) return;");
-                builder.AppendLine("this.__cascadingChanged = true;");
-                builder.AppendLine("this.PropertyChanged?.Invoke(sender, e);");
-            });
+//            builder.AppendBlock("private void OnPropertyChanged(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)", () =>
+//            {
+//                builder.AppendLine("if(__cascadingChanged) return;");
+//                builder.AppendLine("this.__cascadingChanged = true;");
+//                builder.AppendLine("this.PropertyChanged?.Invoke(sender, e);");
+//            });
 
-            builder.AppendLine();
+//            builder.AppendLine();
 
-            builder.AppendBlock("private void OnCollectionChanged(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
-            {
-                builder.AppendLine("if(__cascadingChanged) return;");
-                builder.AppendLine("this.__cascadingChanged = true;");
-                builder.AppendLine("CollectionChanged?.Invoke(sender, e);");
-            });
+//            builder.AppendBlock("private void OnCollectionChanged(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)", () =>
+//            {
+//                builder.AppendLine("if(__cascadingChanged) return;");
+//                builder.AppendLine("this.__cascadingChanged = true;");
+//                builder.AppendLine("CollectionChanged?.Invoke(sender, e);");
+//            });
 
-            builder.AppendLine();
+//            builder.AppendLine();
 
-            builder.AppendBlock($"void System.ComponentModel.IChangeTracking.AcceptChanges()", () =>
-            {
-                builder.AppendLine("this.__baseChanged = false;");
-                builder.AppendBlock("if (__cascadingChanged)", () =>
-                {
-                    builder.AppendLine("this.__cascadingChanged = false;");
-                    foreach (var property in typeProxy.Properties.Where(x => x.ChangeTracking))
-                    {
-                        builder.AppendLine($"((global::System.ComponentModel.IChangeTracking)this.{property.PropertyName})?.AcceptChanges();");
-                    }
-                });
-            });
+//            builder.AppendBlock($"void System.ComponentModel.IChangeTracking.AcceptChanges()", () =>
+//            {
+//                builder.AppendLine("this.__baseChanged = false;");
+//                builder.AppendBlock("if (__cascadingChanged)", () =>
+//                {
+//                    builder.AppendLine("this.__cascadingChanged = false;");
+//                    foreach (var property in typeProxy.Properties.Where(x => x.ChangeTracking))
+//                    {
+//                        builder.AppendLine($"((global::System.ComponentModel.IChangeTracking)this.{property.PropertyName})?.AcceptChanges();");
+//                    }
+//                });
+//            });
 
-            builder.AppendLine();
+//            builder.AppendLine();
 
-            foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
-            {
-                var required = property.Required ? "required " : string.Empty;
-                builder.AppendBlock($"public override {required}{property.Type} {property.PropertyName}", () =>
-                {
-                    builder.AppendLine($"get => base.{property.PropertyName};");
+//            foreach (var property in typeProxy.Properties.Where(x => x.IsVirtual))
+//            {
+//                var required = property.Required ? "required " : string.Empty;
+//                builder.AppendBlock($"public override {required}{property.Type} {property.PropertyName}", () =>
+//                {
+//                    builder.AppendLine($"get => base.{property.PropertyName};");
 
-                    builder.AppendBlock(property.IsInitOnly ? "init" : "set", () =>
-                    {
-                        EmitSetMethod(builder, property);
+//                    builder.AppendBlock(property.IsInitOnly ? "init" : "set", () =>
+//                    {
+//                        EmitSetMethod(builder, property);
 
-                    });
-                });
-                builder.AppendLine();
-            }
-        });
-    }
+//                    });
+//                });
+//                builder.AppendLine();
+//            }
+//        });
+//    }
 
-    private static void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
-    {
-        builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(base.{property.PropertyName}, value))", () =>
-        {
-            if (property.Kind == TypeProxyKind.Value)
-            {
-                builder.AppendLine($"base.{property.PropertyName} = value;");
-            }
-            else
-            {
-                builder.AppendBlock($"if (base.{property.PropertyName} is not null)", () =>
-                {
-                    if (property.NotifyPropertyChanged)
-                    {
-                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged __propertyChanged__)", () =>
-                        {
-                            builder.AppendLine("__propertyChanged__.PropertyChanged -= OnPropertyChanged;");
-                        });
-                    }
-                    if (property.NotifyCollectionChanged)
-                    {
-                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.Collections.Specialized.INotifyCollectionChanged __collectionChanged__)", () =>
-                        {
-                            builder.AppendLine("__collectionChanged__.CollectionChanged -= OnCollectionChanged;");
-                        });
-                    }
-                });
-                builder.AppendLine();
-                builder.AppendBlock("if (value is null)", () =>
-                {
-                    builder.AppendLine($"base.{property.PropertyName} = null;");
-                });
-                builder.AppendBlock("else", () =>
-                {
-                    SetPropertyProxy(builder, property);
-                });
-            }
+//    private static void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
+//    {
+//        builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(base.{property.PropertyName}, value))", () =>
+//        {
+//            if (property.Kind == TypeProxyKind.Value)
+//            {
+//                builder.AppendLine($"base.{property.PropertyName} = value;");
+//            }
+//            else
+//            {
+//                builder.AppendBlock($"if (base.{property.PropertyName} is not null)", () =>
+//                {
+//                    if (property.NotifyPropertyChanged)
+//                    {
+//                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.ComponentModel.INotifyPropertyChanged __propertyChanged__)", () =>
+//                        {
+//                            builder.AppendLine("__propertyChanged__.PropertyChanged -= OnPropertyChanged;");
+//                        });
+//                    }
+//                    if (property.NotifyCollectionChanged)
+//                    {
+//                        builder.AppendBlock($"if (base.{property.PropertyName} is global::System.Collections.Specialized.INotifyCollectionChanged __collectionChanged__)", () =>
+//                        {
+//                            builder.AppendLine("__collectionChanged__.CollectionChanged -= OnCollectionChanged;");
+//                        });
+//                    }
+//                });
+//                builder.AppendLine();
+//                builder.AppendBlock("if (value is null)", () =>
+//                {
+//                    builder.AppendLine($"base.{property.PropertyName} = null;");
+//                });
+//                builder.AppendBlock("else", () =>
+//                {
+//                    SetPropertyProxy(builder, property);
+//                });
+//            }
 
-            builder.AppendLine($"this.OnPropertyChanged(\"{property.PropertyName}\");");
-        });
-        if (property.Kind == TypeProxyKind.Collection)
-        {
-            builder.AppendBlock("else if (value is not null && value is not global::System.ComponentModel.IChangeTracking)", () =>
-            {
-                SetPropertyProxy(builder, property);
-            });
-        }
-    }
+//            builder.AppendLine($"this.OnPropertyChanged(\"{property.PropertyName}\");");
+//        });
+//        if (property.Kind == TypeProxyKind.Collection)
+//        {
+//            builder.AppendBlock("else if (value is not null && value is not global::System.ComponentModel.IChangeTracking)", () =>
+//            {
+//                SetPropertyProxy(builder, property);
+//            });
+//        }
+//    }
 
-    private static void SetPropertyProxy(CSharpCodeBuilder builder, PropertyDefinition property)
-    {
-        if (property.Kind == TypeProxyKind.Collection)
-        {
-            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
-        }
-        else if (property.Kind == TypeProxyKind.Dictionary)
-        {
-            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
-        }
-        else
-        {
-            builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
-        }
+//    private static void SetPropertyProxy(CSharpCodeBuilder builder, PropertyDefinition property)
+//    {
+//        if (property.Kind == TypeProxyKind.Collection)
+//        {
+//            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
+//        }
+//        else if (property.Kind == TypeProxyKind.Dictionary)
+//        {
+//            builder.AppendLine($"base.{property.PropertyName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
+//        }
+//        else
+//        {
+//            builder.AppendLine($"base.{property.PropertyName} = global::{RootNamespace}.ChangeTrackingProxyFactory.Create(value);");
+//        }
 
-        if (property.NotifyPropertyChanged)
-        {
-            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged += OnPropertyChanged;");
-        }
-        if (property.NotifyCollectionChanged)
-        {
-            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged += OnCollectionChanged;");
-        }
-        if (property.ChangeTracking)
-        {
-            builder.AppendLine($"this.__cascadingChanged |= ((global::System.ComponentModel.IChangeTracking)base.{property.PropertyName}).IsChanged;");
-        }
-    }
+//        if (property.NotifyPropertyChanged)
+//        {
+//            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)base.{property.PropertyName}).PropertyChanged += OnPropertyChanged;");
+//        }
+//        if (property.NotifyCollectionChanged)
+//        {
+//            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)base.{property.PropertyName}).CollectionChanged += OnCollectionChanged;");
+//        }
+//        if (property.ChangeTracking)
+//        {
+//            builder.AppendLine($"this.__cascadingChanged |= ((global::System.ComponentModel.IChangeTracking)base.{property.PropertyName}).IsChanged;");
+//        }
+//    }
 
-    private static TypeDefinition CreateProxy(INamedTypeSymbol type, CancellationToken cancellationToken)
-    {
-        var properties = type.GetMembers().OfType<IPropertySymbol>().Where(x => !x.IsReadOnly && !x.IsStatic && !x.IsWriteOnly);
+//    private static TypeDefinition CreateProxy(INamedTypeSymbol type, CancellationToken cancellationToken)
+//    {
+//        var properties = type.GetMembers().OfType<IPropertySymbol>().Where(x => !x.IsReadOnly && !x.IsStatic && !x.IsWriteOnly);
 
-        TypeDefinition typeProxy = new(type.Name, type.GetNamespace(), type.IsRecord);
+//        TypeDefinition typeProxy = new(type.Name, type.GetNamespace(), type.IsRecord);
 
-        foreach (var property in properties)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+//        foreach (var property in properties)
+//        {
+//            cancellationToken.ThrowIfCancellationRequested();
 
-            var propertyDefinition = CreateProperty(property);
-            if (propertyDefinition != null)
-            {
-                typeProxy.Properties.Add(propertyDefinition);
-            }
-        }
+//            var propertyDefinition = CreateProperty(property);
+//            if (propertyDefinition != null)
+//            {
+//                typeProxy.Properties.Add(propertyDefinition);
+//            }
+//        }
 
-        return typeProxy;
-
-
-        static PropertyDefinition? CreateProperty(IPropertySymbol property)
-        {
-            var type = property.Type;
-            var typeName = property.Type.GetFullName();
-            var propertyName = property.Name;
-
-            if (type.IsValueType ||
-                type.TypeKind == TypeKind.Struct ||
-                type.TypeKind == TypeKind.Enum ||
-                type.IsTupleType ||
-                typeName == "string")
-            {
-                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsVirtual, property.IsRequired)
-                {
-                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
-                };
-            }
-
-            if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
-            {
-                var definition = type.OriginalDefinition.GetFullName();
-
-                if (definition == "global::System.Collections.Generic.IDictionary<TKey, TValue>")
-                {
-                    return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsVirtual, property.IsRequired)
-                    {
-                        IsInitOnly = property.SetMethod?.IsInitOnly == true,
-                        KeyType = namedType.TypeArguments[0].GetFullName(),
-                        ElementType = namedType.TypeArguments[1].GetFullName(),
-                        NotifyCollectionChanged = true,
-                        NotifyPropertyChanged = true,
-                        ChangeTracking = true,
-                    };
-                }
-                else if (definition == "global::System.Collections.Generic.IList<T>" ||
-                         definition == "global::System.Collections.Generic.ICollection<T>" ||
-                         definition == "global::System.Collections.Generic.IEnumerable<T>")
-                {
-                    return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsVirtual, property.IsRequired)
-                    {
-                        IsInitOnly = property.SetMethod?.IsInitOnly == true,
-                        ElementType = namedType.TypeArguments[0].GetFullName(),
-                        NotifyCollectionChanged = true,
-                        NotifyPropertyChanged = true,
-                        ChangeTracking = true,
-                    };
-                }
-            }
-
-            var proxiable = type.HasAttribute(ChangeTrackingAttribute);
-
-            if (proxiable)
-            {
-                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
-                {
-                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
-                    NotifyCollectionChanged = true,
-                    NotifyPropertyChanged = true,
-                    ChangeTracking = true,
-                };
-            }
-            else
-            {
-                bool notifyPropertyChanged = false;
-                bool notifyCollectionChanged = false;
-                bool changeTracking = false;
-
-                foreach (var @interface in type.AllInterfaces)
-                {
-                    var fullName = @interface.GetFullName();
-
-                    if (fullName == "global::System.ComponentModel.INotifyPropertyChanged")
-                    {
-                        notifyPropertyChanged = true;
-                    }
-                    else if (fullName == "global::System.Collections.Specialized.INotifyCollectionChanged")
-                    {
-                        notifyCollectionChanged = true;
-                    }
-                    else if (fullName == "global::System.ComponentModel.IChangeTracking")
-                    {
-                        changeTracking = true;
-                    }
-
-                    if (notifyPropertyChanged && notifyCollectionChanged)
-                        break;
-                }
+//        return typeProxy;
 
 
-                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
-                {
-                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
-                    NotifyCollectionChanged = notifyCollectionChanged,
-                    NotifyPropertyChanged = notifyPropertyChanged,
-                    ChangeTracking = changeTracking,
-                };
-            }
-        }
-    }
+//        static PropertyDefinition? CreateProperty(IPropertySymbol property)
+//        {
+//            var type = property.Type;
+//            var typeName = property.Type.GetFullName();
+//            var propertyName = property.Name;
 
-    private sealed class TypeDefinition(string name, string? ns, bool isRecord)
-    {
-        public readonly string? Namespace = ns;
-        public readonly string Name = name;
-        public readonly bool IsRecord = isRecord;
+//            if (type.IsValueType ||
+//                type.TypeKind == TypeKind.Struct ||
+//                type.TypeKind == TypeKind.Enum ||
+//                type.IsTupleType ||
+//                typeName == "string")
+//            {
+//                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsVirtual, property.IsRequired)
+//                {
+//                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
+//                };
+//            }
 
-        public readonly List<PropertyDefinition> Properties = [];
-    }
+//            if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
+//            {
+//                var definition = type.OriginalDefinition.GetFullName();
 
-    private sealed class PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type, bool isVirtual, bool required)
-    {
-        public readonly string PropertyName = propertyName;
-        public readonly string Type = type;
-        public readonly TypeProxyKind Kind = proxyKind;
-        public readonly bool Required = required;
-        public readonly bool IsVirtual = isVirtual;
-        public bool IsInitOnly;
+//                if (definition == "global::System.Collections.Generic.IDictionary<TKey, TValue>")
+//                {
+//                    return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsVirtual, property.IsRequired)
+//                    {
+//                        IsInitOnly = property.SetMethod?.IsInitOnly == true,
+//                        KeyType = namedType.TypeArguments[0].GetFullName(),
+//                        ElementType = namedType.TypeArguments[1].GetFullName(),
+//                        NotifyCollectionChanged = true,
+//                        NotifyPropertyChanged = true,
+//                        ChangeTracking = true,
+//                    };
+//                }
+//                else if (definition == "global::System.Collections.Generic.IList<T>" ||
+//                         definition == "global::System.Collections.Generic.ICollection<T>" ||
+//                         definition == "global::System.Collections.Generic.IEnumerable<T>")
+//                {
+//                    return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsVirtual, property.IsRequired)
+//                    {
+//                        IsInitOnly = property.SetMethod?.IsInitOnly == true,
+//                        ElementType = namedType.TypeArguments[0].GetFullName(),
+//                        NotifyCollectionChanged = true,
+//                        NotifyPropertyChanged = true,
+//                        ChangeTracking = true,
+//                    };
+//                }
+//            }
 
-        public string? KeyType;
-        public string? ElementType;
+//            var proxiable = type.HasAttribute(ChangeTrackingAttribute);
 
-        public bool NotifyPropertyChanged;
-        public bool NotifyCollectionChanged;
-        public bool ChangeTracking;
+//            if (proxiable)
+//            {
+//                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
+//                {
+//                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
+//                    NotifyCollectionChanged = true,
+//                    NotifyPropertyChanged = true,
+//                    ChangeTracking = true,
+//                };
+//            }
+//            else
+//            {
+//                bool notifyPropertyChanged = false;
+//                bool notifyCollectionChanged = false;
+//                bool changeTracking = false;
 
-    }
+//                foreach (var @interface in type.AllInterfaces)
+//                {
+//                    var fullName = @interface.GetFullName();
 
-    private enum TypeProxyKind
-    {
-        Value,
-        Object,
-        Collection,
-        Dictionary,
-    }
-}
+//                    if (fullName == "global::System.ComponentModel.INotifyPropertyChanged")
+//                    {
+//                        notifyPropertyChanged = true;
+//                    }
+//                    else if (fullName == "global::System.Collections.Specialized.INotifyCollectionChanged")
+//                    {
+//                        notifyCollectionChanged = true;
+//                    }
+//                    else if (fullName == "global::System.ComponentModel.IChangeTracking")
+//                    {
+//                        changeTracking = true;
+//                    }
+
+//                    if (notifyPropertyChanged && notifyCollectionChanged)
+//                        break;
+//                }
+
+
+//                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsVirtual, property.IsRequired)
+//                {
+//                    IsInitOnly = property.SetMethod?.IsInitOnly == true,
+//                    NotifyCollectionChanged = notifyCollectionChanged,
+//                    NotifyPropertyChanged = notifyPropertyChanged,
+//                    ChangeTracking = changeTracking,
+//                };
+//            }
+//        }
+//    }
+
+//    private sealed class TypeDefinition(string name, string? ns, bool isRecord)
+//    {
+//        public readonly string? Namespace = ns;
+//        public readonly string Name = name;
+//        public readonly bool IsRecord = isRecord;
+
+//        public readonly List<PropertyDefinition> Properties = [];
+//    }
+
+//    private sealed class PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type, bool isVirtual, bool required)
+//    {
+//        public readonly string PropertyName = propertyName;
+//        public readonly string Type = type;
+//        public readonly TypeProxyKind Kind = proxyKind;
+//        public readonly bool Required = required;
+//        public readonly bool IsVirtual = isVirtual;
+//        public bool IsInitOnly;
+
+//        public string? KeyType;
+//        public string? ElementType;
+
+//        public bool NotifyPropertyChanged;
+//        public bool NotifyCollectionChanged;
+//        public bool ChangeTracking;
+
+//    }
+
+//    private enum TypeProxyKind
+//    {
+//        Value,
+//        Object,
+//        Collection,
+//        Dictionary,
+//    }
+//}
 

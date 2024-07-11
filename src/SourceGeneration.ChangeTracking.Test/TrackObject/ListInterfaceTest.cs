@@ -8,7 +8,8 @@ public class ListInterfaceTest
     [TestMethod]
     public void ValueList_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject());
+        var tracking = new TrackingListInterfaceObject();
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -29,10 +30,11 @@ public class ListInterfaceTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
+        var tracking = new TrackingListInterfaceObject
         {
             IListOfValue = [1]
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -53,10 +55,11 @@ public class ListInterfaceTest
     [TestMethod]
     public void ValueList_Clear()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
+        var tracking = new TrackingListInterfaceObject
         {
             IListOfValue = [1]
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -77,10 +80,11 @@ public class ListInterfaceTest
     [TestMethod]
     public void ValueList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
+        var tracking = new TrackingListInterfaceObject
         {
             IListOfValue = [1]
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -101,10 +105,11 @@ public class ListInterfaceTest
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingListInterfaceObject()
+        var tracking = new TrackingListInterfaceObject()
         {
             IListOfObject = [new TrackingObject(), new TrackingObject()]
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -140,9 +145,14 @@ public class ListInterfaceTest
 }
 
 [ChangeTracking]
-public class TrackingListInterfaceObject
+public partial class TrackingListInterfaceObject
 {
+    public TrackingListInterfaceObject()
+    {
+        IListOfValue = [];
+        IListOfObject = [];
+    }
 
-    public virtual IList<int> IListOfValue { get; set; } = [];
-    public virtual IList<TrackingObject> IListOfObject { get; set; } = [];
+    public partial IList<int> IListOfValue { get; set; } 
+    public partial IList<TrackingObject> IListOfObject { get; set; } 
 }

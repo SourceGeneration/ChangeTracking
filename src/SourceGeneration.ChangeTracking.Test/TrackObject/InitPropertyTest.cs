@@ -6,7 +6,7 @@ public class InitPropertyTest
     [TestMethod]
     public void TrackingObjectInit()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new InitPropertyTestObject()
+        var tracking = new InitPropertyTestObject()
         {
             InitProperty = 1,
             RequiredInitProperty = 2,
@@ -15,7 +15,7 @@ public class InitPropertyTest
                 InitProperty = 1,
                 RequiredInitProperty = 2,
             }
-        });
+        };
 
         Assert.AreEqual(1, tracking.InitProperty);
         Assert.AreEqual(2, tracking.RequiredInitProperty);
@@ -27,10 +27,10 @@ public class InitPropertyTest
 
 
 [ChangeTracking]
-public class InitPropertyTestObject
+public partial class InitPropertyTestObject
 {
-    public virtual int InitProperty { get; init; }
-    public virtual required int RequiredInitProperty { get; init; }
+    public partial int InitProperty { get; init; }
+    public required partial int RequiredInitProperty { get; init; }
 
-    public virtual InitPropertyTestObject? NestedProperty { get; init; }
+    public partial InitPropertyTestObject? NestedProperty { get; init; }
 }

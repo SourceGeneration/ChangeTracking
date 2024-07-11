@@ -12,29 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 
 [ChangeTracking]
-public partial class TestModel
+public partial class CascadingTestObject
 {
-    public partial string A { get; set; }
-    public partial int B { get; }
-    public partial bool? C { get; init; }
-    public partial int[] D { get; set; }
-    public partial object E { get; set; }
-    public partial IList<object> F { get; set; }
-    public partial TestModel2 G {get;set;}
-}
-
-[ChangeTracking]
-public partial class TestModel2
-{
-    public partial string A { get; set; }
-    public partial int B { get; }
-}
-
-[ChangeTracking]
-public partial class TestModel3 : TestModel2
-{
-    public partial string C { get; set; }
-    public partial int D { get; }
+    public partial int ReadOnlyProperty { get; }
 }
 
 ";

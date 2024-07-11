@@ -8,10 +8,11 @@ public class EnumerableTest
     [TestMethod]
     public void ObjectList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingEnumerableObject()
+        var tracking = new TrackingEnumerableObject
         {
             IEnumerableOfObject = [new TrackingObject(), new TrackingObject()]
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -47,9 +48,14 @@ public class EnumerableTest
 }
 
 [ChangeTracking]
-public class TrackingEnumerableObject
+public partial class TrackingEnumerableObject
 {
-    public virtual IEnumerable<int> IEnumerableOfValue { get; set; } = [];
-    public virtual IEnumerable<TrackingObject> IEnumerableOfObject { get; set; } = [];
+    public TrackingEnumerableObject()
+    {
+        IEnumerableOfValue = [];
+        IEnumerableOfObject = [];
+    }
+    public partial IEnumerable<int> IEnumerableOfValue { get; set; }
+    public partial IEnumerable<TrackingObject> IEnumerableOfObject { get; set; }
 
 }

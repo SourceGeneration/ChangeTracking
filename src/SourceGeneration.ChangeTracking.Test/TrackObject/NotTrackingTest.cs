@@ -1,4 +1,6 @@
-﻿namespace SourceGeneration.ChangeTracking.TrackObjects;
+﻿using System.ComponentModel;
+
+namespace SourceGeneration.ChangeTracking.TrackObjects;
 
 [TestClass]
 public class NotTrackingTest
@@ -6,7 +8,13 @@ public class NotTrackingTest
     [TestMethod]
     public void NotTracking()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new NotTrackingWarpperObject());
+        var tracking = new NotTrackingWarpperObject()
+        {
+            CascadingTracking = new(),
+            NotTracking = new(),
+            NotTrackingProperty = new(),
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
@@ -25,7 +33,14 @@ public class NotTrackingTest
     [TestMethod]
     public void CascadingTracking()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new NotTrackingWarpperObject());
+        var tracking = new NotTrackingWarpperObject
+        {
+            CascadingTracking = new(),
+            NotTracking = new(),
+            NotTrackingProperty = new(),
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
+
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.CascadingTracking).IsChanged);
@@ -48,7 +63,13 @@ public class NotTrackingTest
     [TestMethod]
     public void NotTrackingProperty()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new NotTrackingWarpperObject());
+        var tracking = new NotTrackingWarpperObject
+        {
+            CascadingTracking = new(),
+            NotTracking = new(),
+            NotTrackingProperty = new(),
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking.NotTrackingProperty).IsChanged);
@@ -70,11 +91,11 @@ public class NotTrackingTest
 }
 
 [ChangeTracking]
-public class NotTrackingWarpperObject
+public partial class NotTrackingWarpperObject
 {
-    public virtual NotTrackingObject NotTracking { get; set; } = new();
-    public virtual NotTrackingPropertyObject NotTrackingProperty { get; set; } = new();
-    public virtual CascadingTrackingObject CascadingTracking { get; set; } = new();
+    public partial NotTrackingObject NotTracking { get; set; }
+    public partial NotTrackingPropertyObject NotTrackingProperty { get; set; }
+    public partial CascadingTrackingObject CascadingTracking { get; set; }
 }
 
 public class NotTrackingObject
@@ -83,13 +104,13 @@ public class NotTrackingObject
 }
 
 [ChangeTracking]
-public class NotTrackingPropertyObject
+public partial class NotTrackingPropertyObject
 {
     public int Value { get; set; }
 }
 
 [ChangeTracking]
-public class CascadingTrackingObject
+public partial class CascadingTrackingObject
 {
-    public virtual int Value { get; set; }
+    public partial int Value { get; set; }
 }

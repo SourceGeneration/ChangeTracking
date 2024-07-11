@@ -8,7 +8,7 @@ public class DictionaryInterfaceTest
     [TestMethod]
     public void ValueDictionary_Add()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject());
+        var tracking = new TrackingInterfaceDictionaryObject();
 
         tracking.IDictionaryOfValue.Add(1, 1);
         Assert.IsTrue(((ICascadingChangeTracking)tracking).IsChanged);
@@ -26,13 +26,14 @@ public class DictionaryInterfaceTest
     [TestMethod]
     public void ValueList_Remove()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject()
+        var tracking = new TrackingInterfaceDictionaryObject
         {
             IDictionaryOfValue = new Dictionary<int, int>
             {
                 { 1, 1 },
             }
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -53,13 +54,14 @@ public class DictionaryInterfaceTest
     [TestMethod]
     public void ValueList_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject()
+        var tracking = new TrackingInterfaceDictionaryObject()
         {
             IDictionaryOfValue = new Dictionary<int, int>
             {
                 { 1, 1 },
             }
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -80,14 +82,15 @@ public class DictionaryInterfaceTest
     [TestMethod]
     public void ObjectDictionary_ItemChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingInterfaceDictionaryObject()
+        var tracking = new TrackingInterfaceDictionaryObject()
         {
             IDictionaryOfObject = new Dictionary<int, TrackingObject>
             {
                 { 0, new TrackingObject() },
                 { 1, new TrackingObject() }
             }
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
 
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
@@ -124,9 +127,15 @@ public class DictionaryInterfaceTest
 }
 
 [ChangeTracking]
-public class TrackingInterfaceDictionaryObject
+public partial class TrackingInterfaceDictionaryObject
 {
 
-    public virtual IDictionary<int, int> IDictionaryOfValue { get; set; } = new Dictionary<int, int>();
-    public virtual IDictionary<int, TrackingObject> IDictionaryOfObject { get; set; } = new Dictionary<int, TrackingObject>();
+    public TrackingInterfaceDictionaryObject()
+    {
+        IDictionaryOfValue = new Dictionary<int, int>();
+        IDictionaryOfObject  = new Dictionary<int, TrackingObject>();
+    }
+
+    public partial IDictionary<int, int> IDictionaryOfValue { get; set; }
+    public partial IDictionary<int, TrackingObject> IDictionaryOfObject { get; set; }
 }

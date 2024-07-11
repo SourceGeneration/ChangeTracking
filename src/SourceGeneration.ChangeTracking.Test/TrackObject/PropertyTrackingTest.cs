@@ -8,7 +8,7 @@ public class PropertyTrackingTest
     [TestMethod]
     public void PropertyChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingPropertyObject());
+        var tracking = new TrackingPropertyObject();
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
@@ -28,10 +28,12 @@ public class PropertyTrackingTest
     [TestMethod]
     public void CascadingObject_ValuePropertyChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingPropertyObject()
+        var tracking = new TrackingPropertyObject()
         {
             CascadingObject = new()
-        });
+        };
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
+
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
@@ -57,10 +59,12 @@ public class PropertyTrackingTest
     [TestMethod]
     public void CascadingObject_ObjectPropertyChanged()
     {
-        var tracking = ChangeTrackingProxyFactory.Create(new TrackingPropertyObject()
+        var tracking = new TrackingPropertyObject()
         {
             CascadingObject = new()
-        });
+        }; 
+        ((ICascadingChangeTracking)tracking).AcceptChanges();
+
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsChanged);
         Assert.IsFalse(((ICascadingChangeTracking)tracking).IsCascadingChanged);
 
@@ -92,10 +96,10 @@ public class PropertyTrackingTest
 }
 
 [ChangeTracking]
-public class TrackingPropertyObject
+public partial class TrackingPropertyObject
 {
-    public virtual string? StringProperty { get; set; }
-    public virtual int IntProperty { get; set; }
-    public virtual TrackingObject? CascadingObject { get; set; }
+    public partial string? StringProperty { get; set; }
+    public partial int IntProperty { get; set; }
+    public partial TrackingObject? CascadingObject { get; set; }
 
 }

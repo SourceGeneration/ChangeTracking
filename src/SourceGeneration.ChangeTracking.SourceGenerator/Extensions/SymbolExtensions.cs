@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.CodeAnalysis;
@@ -66,11 +67,17 @@ internal static class SymbolExtensions
         }
     }
 
-    public static bool HasAttribute(this ISymbol symbol, string attributeTypeName)
+    public static bool HasAttribute(this ISymbol symbol, string attributeTypeName, bool inherited = false)
     {
         foreach (var attribute in symbol.GetAttributes())
         {
             if (attribute.AttributeClass?.ToDisplayString() == attributeTypeName)
+                return true;
+        }
+
+        if(inherited && symbol is ITypeSymbol typeSymbol && typeSymbol.BaseType != null)
+        {
+            if (HasAttribute(typeSymbol.BaseType, attributeTypeName, inherited))
                 return true;
         }
         return false;
