@@ -27,24 +27,27 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
     public void AcceptChanges()
     {
-        var watches = _watches;
-        foreach (var observer in watches.Cast<IObserver<TState>>())
+        lock (State)
         {
-            observer.OnNext(State);
-        }
-
-        if (watches.Any(x => x.IsChanged))
-        {
-            var subscribes = _subscribers;
-            foreach (var subscriber in subscribes)
+            var watches = _watches;
+            foreach (var observer in watches.Cast<IObserver<TState>>())
             {
-                subscriber(State);
+                observer.OnNext(State);
             }
-        }
 
-        foreach (IChangeTracking observer in watches)
-        {
-            observer.AcceptChanges();
+            if (watches.Any(x => x.IsChanged))
+            {
+                var subscribes = _subscribers;
+                foreach (var subscriber in subscribes)
+                {
+                    subscriber(State);
+                }
+            }
+
+            foreach (IChangeTracking observer in watches)
+            {
+                observer.AcceptChanges();
+            }
         }
     }
 
