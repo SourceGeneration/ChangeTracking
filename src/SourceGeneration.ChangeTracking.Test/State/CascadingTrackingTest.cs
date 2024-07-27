@@ -41,7 +41,7 @@ public class CascadingTrackingTest
     public void Cascading_Value_NotChange()
     {
         var state = new CascadingTestState();
-
+        state.AcceptChanges();
         bool changed = false;
 
         var tracker = state.CreateTracker();
@@ -143,6 +143,7 @@ public class CascadingTrackingTest
     public void Cascading_Collection_Set()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
 
@@ -161,6 +162,7 @@ public class CascadingTrackingTest
     public void Cascading_Collection_Set_NotChange()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
 
@@ -207,7 +209,7 @@ public partial class CascadingTestState : State<CascadingTestState>
     {
         Object = new();
         List = [];
-        __AcceptChanges();
+        //__AcceptChanges();
     }
 
     public partial CascadingCollectionTestObject Object { get; set; }
@@ -226,4 +228,3 @@ public partial class CascadingCollectionTestObject
     public partial int Value { get; set; }
     public partial ChangeTrackingList<int> List { get; set; } 
 }
-

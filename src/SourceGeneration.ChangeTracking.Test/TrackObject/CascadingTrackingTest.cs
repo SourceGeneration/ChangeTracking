@@ -38,6 +38,36 @@ public class CascadingTrackingTest
         Assert.IsTrue(((ICascadingChangeTracking)model).IsCascadingChanged);
     }
 
+    [TestMethod]
+    public void Cascading_List()
+    {
+        var model = new CascadingListObject()
+        {
+            Items = []
+        };
+
+        ((IChangeTracking)model).AcceptChanges();
+
+        model.Items.Add(new CascadingListObject
+        {
+            Items = []
+        });
+
+        Assert.IsTrue(((IChangeTracking)model.Items).IsChanged);
+        Assert.IsTrue(((IChangeTracking)model).IsChanged);
+
+        ((IChangeTracking)model).AcceptChanges();
+        Assert.IsFalse(((IChangeTracking)model.Items).IsChanged);
+        Assert.IsFalse(((IChangeTracking)model).IsChanged);
+
+        model.Items[0].Items.Add(new CascadingListObject());
+        Assert.IsTrue(((IChangeTracking)model.Items).IsChanged);
+        Assert.IsTrue(((IChangeTracking)model).IsChanged);
+        ((IChangeTracking)model).AcceptChanges();
+
+        Assert.IsFalse(((IChangeTracking)model.Items).IsChanged);
+        Assert.IsFalse(((IChangeTracking)model).IsChanged);
+    }
 }
 
 [ChangeTracking]
@@ -49,6 +79,17 @@ public partial class CascadingTestObject
     }
 
     public partial CascadingCollectionTestObject Object { get; set; }
+}
+
+[ChangeTracking]
+public partial class CascadingListObject
+{
+    public CascadingListObject()
+    {
+
+    }
+
+    public partial ChangeTrackingList<CascadingListObject> Items { get; set; }
 }
 
 [ChangeTracking]
