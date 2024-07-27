@@ -42,7 +42,7 @@ public class ChangeTrackingList<T> : ChangeTrackingObjectBase, IList<T>
     public void Add(T item)
     {
         _list.Add(item);
-       AddNotifyEventSubscription(item);
+        AddNotifyEventSubscription(item);
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
     }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 
 namespace SourceGeneration.ChangeTracking;
 
@@ -40,9 +41,16 @@ public abstract class ChangeTrackingObjectBase : ICascadingChangeTracking, INoti
 
     protected void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
     {
-        if (_baseChanged) return;
-
         _baseChanged = true;
+
+        if (args.NewItems != null)
+        {
+            if (_cascadingChanged == false && args.NewItems.OfType<IChangeTracking>().Any(x => x.IsChanged))
+            {
+                _cascadingChanged = true;
+            }
+        }
+
         CollectionChanged?.Invoke(this, args);
     }
 
