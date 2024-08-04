@@ -5,23 +5,24 @@ namespace SourceGeneration.ChangeTracking;
 
 public sealed class ChangeTrackingScopeEqualityComparer<TValue>(ChangeTrackingScope changeTrackingScope) : IEqualityComparer<TValue>
 {
-    public bool Equals(TValue? x, TValue? y)
+    public bool Equals(TValue? oldValue, TValue? newValue)
     {
         if (changeTrackingScope == ChangeTrackingScope.Always)
             return false;
 
-        if (x == null && y == null) return true;
-        if (x == null || y == null) return false;
+        if (oldValue == null && newValue == null) return true;
+        if (oldValue == null || newValue == null) return false;
 
-        if (!EqualityComparer<TValue>.Default.Equals(x, y))
+        if (!EqualityComparer<TValue>.Default.Equals(oldValue, newValue))
             return false;
 
-        if (y is IChangeTracking tracking && tracking.IsChanged)
+        if (newValue is IChangeTracking tracking && tracking.IsChanged)
         {
-            if (changeTrackingScope == ChangeTrackingScope.Root)
+            if(changeTrackingScope == ChangeTrackingScope.Root)
             {
-                if (y is ICascadingChangeTracking cascading)
-                    return cascading.IsCascadingChanged;
+                if (newValue is ICascadingChangeTracking cascading)
+                    return !cascading.IsBaseChanged;
+                return false;
             }
             else
             {
