@@ -161,6 +161,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
                 builder.AppendLine("bool global::System.ComponentModel.IChangeTracking.IsChanged => __baseChanged || __cascadingChanged;");
                 builder.AppendLine($"bool global::{RootNamespace}.ICascadingChangeTracking.IsCascadingChanged => __cascadingChanged;");
+                builder.AppendLine($"bool global::{RootNamespace}.ICascadingChangeTracking.IsBaseChanged => __baseChanged;");
 
                 builder.AppendLine();
                 builder.AppendBlock("protected void OnPropertyChanging(string propertyName)", () =>
