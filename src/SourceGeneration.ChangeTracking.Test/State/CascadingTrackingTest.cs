@@ -7,6 +7,7 @@ public class CascadingTrackingTest
     public void Root_Value_Change()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
 
@@ -58,6 +59,7 @@ public class CascadingTrackingTest
     public void Root_Collection_Add()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
 
@@ -75,6 +77,7 @@ public class CascadingTrackingTest
     public void Root_Collection_Set()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
 
@@ -92,6 +95,7 @@ public class CascadingTrackingTest
     public void Root_Collection_Remove()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
 
@@ -177,9 +181,36 @@ public class CascadingTrackingTest
     }
 
     [TestMethod]
+    public void Root_ObjectCollection_Add()
+    {
+        var state = new CascadingTestState();
+        state.AcceptChanges();
+
+        bool changed = false;
+        int subscribe = 0;
+
+        var tracker = state.CreateTracker();
+        tracker.OnChange(() => changed = true);
+        tracker.Watch(x => x.List, _ => subscribe++, ChangeTrackingScope.Root);
+
+        state.List.Add(new CascadingCollectionTestObject());
+        state.AcceptChanges();
+
+        Assert.IsTrue(changed);
+        Assert.AreEqual(2, subscribe);
+
+        changed = false;
+        state.List[0].Value = 2;
+        state.AcceptChanges();
+        Assert.IsFalse(changed);
+        Assert.AreEqual(2, subscribe);
+    }
+
+    [TestMethod]
     public void Cascading_ObjectCollection_Add()
     {
         var state = new CascadingTestState();
+        state.AcceptChanges();
 
         bool changed = false;
         int subscribe = 0;
@@ -200,6 +231,7 @@ public class CascadingTrackingTest
         Assert.IsTrue(changed);
         Assert.AreEqual(3, subscribe);
     }
+
 }
 
 [ChangeTracking]
@@ -226,5 +258,5 @@ public partial class CascadingCollectionTestObject
     }
 
     public partial int Value { get; set; }
-    public partial ChangeTrackingList<int> List { get; set; } 
+    public partial ChangeTrackingList<int> List { get; set; }
 }
