@@ -11,6 +11,7 @@ public abstract class ChangeTrackingObjectBase : ICascadingChangeTracking, INoti
 
     public bool IsChanged => _cascadingChanged || _baseChanged;
     public bool IsCascadingChanged => _cascadingChanged;
+    public bool IsBaseChanged => _baseChanged;
 
     public event PropertyChangingEventHandler? PropertyChanging;
     public event PropertyChangedEventHandler? PropertyChanged;
