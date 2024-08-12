@@ -20,10 +20,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
             ChangeTrackingAttribute,
             predicate: static (node, token) =>
             {
-                if (node is not TypeDeclarationSyntax type
-                    || !type.IsPartial()
-                    || type.IsAbstract()
-                    || type.TypeParameterList != null)
+                if (node is not TypeDeclarationSyntax type || !type.IsPartial())
                 {
                     return false;
                 }
@@ -120,7 +117,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
             }
 
             var code = builder.ToString();
-            sourceContext.AddSource($"{typeSymbol.GetFullName(false)}.ChangeTacking.g.cs", code);
+            sourceContext.AddSource($"{typeProxy.Namespace ?? "gobal-"}.{typeProxy.MetadataName}.ChangeTacking.g.cs", code);
         });
     }
 
@@ -268,7 +265,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         });
     }
 
-    private static  void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
+    private static void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
     {
         builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals({property.FieldName}, value))", () =>
         {
@@ -381,7 +378,17 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
             .OfType<IPropertySymbol>()
             .Where(x => !x.IsReadOnly && !x.IsStatic && !x.IsWriteOnly && x.IsPartialDefinition);
 
-        TypeDefinition typeProxy = new(type.Name, type.GetNamespace(), type.IsRecord);
+        string name;
+        if (type.TypeParameters != null && type.TypeParameters.Length > 0)
+        {
+            name = $"{type.Name}<{string.Join(", ", type.TypeParameters.Select(x => x.Name))}>";
+        }
+        else
+        {
+            name = type.Name;
+        }
+
+        TypeDefinition typeProxy = new(name, type.MetadataName, type.GetNamespace(), type.IsRecord);
 
         typeProxy.ContainerTypes.AddRange(containers);
 
@@ -550,10 +557,11 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         }
     }
 
-    private sealed class TypeDefinition(string name, string? ns, bool isRecord)
+    private sealed class TypeDefinition(string name, string metadataName, string? ns, bool isRecord)
     {
         public readonly string? Namespace = ns;
         public readonly string Name = name;
+        public readonly string MetadataName = metadataName;
         public readonly bool IsRecord = isRecord;
 
         public bool NotifyPropertyChanged;
