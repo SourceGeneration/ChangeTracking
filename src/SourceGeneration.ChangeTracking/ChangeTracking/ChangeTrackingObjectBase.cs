@@ -100,6 +100,4 @@ public abstract class ChangeTrackingObjectBase : ICascadingChangeTracking, INoti
             notify3.CollectionChanged -= OnCollectionChanged;
         }
     }
-
-
 }
