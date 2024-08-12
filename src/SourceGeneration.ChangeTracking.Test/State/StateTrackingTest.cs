@@ -102,7 +102,7 @@ public class StateTrackingTest
         tracker.OnChange(() => changed = true);
 
         state.Value1 = 1;
-        state.AcceptChanges();
+        ((IState<TestState>)state).AcceptChanges();
 
         Assert.IsTrue(changed);
 
