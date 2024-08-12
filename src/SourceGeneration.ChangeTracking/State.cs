@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace SourceGeneration.ChangeTracking;
 
-public class State<TSelf> where TSelf : State<TSelf>
+public class State<TSelf> : IState<TSelf> where TSelf : State<TSelf>
 {
     private ImmutableArray<ChangeTracker<TSelf>> _trackers = [];
 
