@@ -12,10 +12,11 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 
 [ChangeTracking]
-public partial class CascadingTestObject
+public partial class GenericType<T>
 {
-    public partial int ReadOnlyProperty { get; }
+    public partial int A { get; set; }
 }
+
 
 ";
         var result = CSharpTestGenerator.Generate<ChanageTrackingSourceGenerator>(source, typeof(ChangeTrackingAttribute).Assembly);
