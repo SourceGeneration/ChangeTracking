@@ -2,9 +2,9 @@
 
 [![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.ChangeTracking.svg)](https://www.nuget.org/packages/SourceGeneration.ChangeTracking)
 
-States is a state management framework based on Source Generator, it supports AOT compilation.
+SourceGeneration.ChangeTracking is a state management framework based on Source Generator, it supports `AOT` compilation.
 
-## Prerequisite
+## Installing
 
 This library uses C# preview features `partial property`, Before using this library, please ensure the following prerequisites are met:
 - Visual Studio is version 17.11 preview 3 or higher.
@@ -14,8 +14,6 @@ This library uses C# preview features `partial property`, Before using this libr
   <LangVersion>preview</LangVersion>  
 </PropertyGroup>  
 ```
-
-## Installing
 
 ```powershell
 Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta2.240822.1
