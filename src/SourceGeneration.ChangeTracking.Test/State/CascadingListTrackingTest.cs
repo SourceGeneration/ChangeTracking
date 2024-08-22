@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SourceGeneration.ChangeTracking.State;
+namespace SourceGeneration.ChangeTracking.StateTest;
 
 [TestClass]
 public class CascadingListTrackingTest

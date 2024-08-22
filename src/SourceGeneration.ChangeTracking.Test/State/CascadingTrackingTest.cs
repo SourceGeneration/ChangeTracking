@@ -1,4 +1,4 @@
-﻿namespace SourceGeneration.ChangeTracking.State;
+﻿namespace SourceGeneration.ChangeTracking.StateTest;
 
 [TestClass]
 public class CascadingTrackingTest

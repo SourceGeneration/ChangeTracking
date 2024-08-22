@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Threading.Channels;
 
-namespace SourceGeneration.ChangeTracking.State;
+namespace SourceGeneration.ChangeTracking.StateTest;
 
 [TestClass]
 public class StateTrackingTest
@@ -102,7 +102,7 @@ public class StateTrackingTest
         tracker.OnChange(() => changed = true);
 
         state.Value1 = 1;
-        ((IState<TestState>)state).AcceptChanges();
+        state.AcceptChanges();
 
         Assert.IsTrue(changed);
 
