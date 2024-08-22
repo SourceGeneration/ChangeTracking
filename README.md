@@ -255,20 +255,16 @@ disposable3.Dispose(); // unsubscribe: merge changed subscribe
 tracker.Dispose(); // dispose tracker
 ```
 
-## Blazor
+## Use in Blazor 
 
 You can use `States` in `Blazor`, it supports `AOT` compilation
 
-**WebAssembly or Hybird**
-
 ```c#
+//WebAssembly or Hybird
 services.AddSingleton<Goods>();
-```
 
-**Server**
-
-```c#
-services.AddScoped<Goods>(ServiceLifetime.Scoped);
+//Server
+services.AddScoped<Goods>();
 ```
 
 **Inject state into component**
