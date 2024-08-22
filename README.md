@@ -1,4 +1,4 @@
-# States
+# ChangeTracking
 
 [![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.ChangeTracking.svg)](https://www.nuget.org/packages/SourceGeneration.ChangeTracking)
 
@@ -25,7 +25,7 @@ Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta2.240822.1
 dotnet add package SourceGeneration.ChangeTracking --version 1.0.0-beta2.240822.1
 ```
 
-## ChangeTacking
+## Start
 
 States source generator will generate partial class for your state type, you just need to add `ChangeTrackingAttriute`, The state type must be `partial`, The property must be `partial` and have a setter
 
