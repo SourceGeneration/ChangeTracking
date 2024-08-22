@@ -1,39 +1,55 @@
 # States
 
-[![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.States.svg)](https://www.nuget.org/packages/SourceGeneration.States)
+[![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.ChangeTracking.svg)](https://www.nuget.org/packages/SourceGeneration.ChangeTracking)
 
-States is a state management framework based on Source Generator and Reactive (RX) with no emissions, and it supports AOT compilation.
+States is a state management framework based on Source Generator, it supports AOT compilation.
+
+## Prerequisite
+
+This library uses C# preview features `partial property`, Before using this library, please ensure the following prerequisites are met:
+- Visual Studio is version 17.11 preview 3 or higher.
+- To enable C# language preview in your project, add the following to your .csproj file
+```c#
+<PropertyGroup>  
+  <LangVersion>preview</LangVersion>  
+</PropertyGroup>  
+```
 
 ## Installing
 
 ```powershell
-Install-Package SourceGeneration.States -Version 1.0.0-beta2.240221.2
+Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta2.240822.1
 ```
 
 ```powershell
-dotnet add package SourceGeneration.States --version 1.0.0-beta2.240221.2
+dotnet add package SourceGeneration.ChangeTracking --version 1.0.0-beta2.240822.1
 ```
 
 ## ChangeTacking
 
-States source generator will generate proxy class for your state type, you just need to add `ChangeTrackingAttriute`, property must be `virtual` and have a setter
+States source generator will generate partial class for your state type, you just need to add `ChangeTrackingAttriute`, The state type must be `partial`, The property must be `partial` and have a setter
 
 ```c#
 [ChangeTracking]
-public class Goods
+public partial class Goods
 {
-    public virtual int Number { get; set; }
-    public virtual double Price { get; set; }
-    public virtual int Count { get; set; }
+    public Goods()
+    {
+        Price = 1.0;
+    }
+
+    public partial int Number { get; set; }
+    public partial double Price { get; set; }
+    public partial int Count { get; set; }
 }
 ```
 
-The proxy class implement `INotifyPropertyChanged` and `IChangeTracking`
+The partial class implement `INotifyPropertyChanging`, `INotifyPropertyChanged` and `IChangeTracking`
 
 ```c#
-internal class Goods__Proxy__ : Goods, INotifyPropertyChanged, System.ComponentModel.IChangeTracking
+public partial class Goods : INotifyPropertyChanging, INotifyPropertyChanged, System.ComponentModel.IChangeTracking
 {
-    //Properties override
+    //Properties partial implementation
 }
 ```
 
@@ -41,43 +57,65 @@ States determines whether an object has been modified through two methods:
 - Checking if the object reference has changed.
 - Checking IChangeTracking.IsChanged property.
 
-
-## Subscribe
-
+## State
+Based on ChangeTracking, we can build a state that subscribes to changes.
 ```c#
-State<Goods> state = new(new Goods());
-
-state.Bind(x => x.Price, x => Console.WriteLine($"Price has changed: {x}"));
-state.Bind(x => x.Count, x => Console.WriteLine($"Count has changed: {x}"));
-
-// ouput Price changed: 3.14
-// ouput Price changed: 3
-state.Update(x =>
+[ChangeTracking]
+public partial class Goods : State<Goods>
 {
-    x.Price = 3.14;
-    x.Count = 3;
-});
+    public Goods()
+    {
+        Price = 1.0;
+    }
 
-// no ouput, the value has not changed
-state.Update(x => x.Price = 3.14);
+    public partial int Number { get; set; }
+    public partial double Price { get; set; }
+    public partial int Count { get; set; }
+}
+```
+The State class can create a IChangeTracker.
+```c#
+Goods state = new Goods();
+int currentCount = 0;
 
-// no ouput, because the property of Number was not subscribe
-state.Update(x => x.Number = 1);
+//Create a IChangeTracker to tracking state changes
+var tracker = state.CreateTracker();
+
+//Watch price and count property
+tracker.Watch(x => x.Price, x => Console.WriteLine($"Price has changed: {x}"));
+tracker.Watch(x => x.Count, x => Console.WriteLine($"Count has changed: {x}"));
+
+state.Count++;
+state.AcceptChanges(); // output: Count has changed: 1
+
+state.Price = 3.14;
+state.AcceptChanges(); // output: Price has changed: 3.14
+
+state.Number = 1;
+state.AcceptChanges(); // no output, because the Number property was not watch
+
+state.Count = 1;
+state.AcceptChanges(); // no output, because the Count property has not changed
+
 ```
 
 ## Predicate
 
 ```c#
-state.Bind(
-    selector: x => x.Price,
+
+tracker.Watch(
+    selector: x => x.Count,
     predicate: x => x >= 10,
-    subscriber: x => Console.WriteLine($"Price changed: {x}"));
+    subscriber: x => Console.WriteLine($"Count changed: {x}"));
 
 // no console ouput, the value is less than 10
-state.Update(x => x.Price = 9);
+state.Count = 9;
+state.AcceptChanges();
 
-// ouput Price changed: 10
-state.Update(x => x.Price = 10);
+// ouput Count changed: 10
+state.Count = 10;
+state.AcceptChanges();
+
 ```
 
 ## Change Scope
@@ -92,174 +130,131 @@ States support change scope, You can specify the scope of the subscribed changes
 
 ```c#
 [ChangeTracking]
-public class Goods
+public partial class Goods : State<Goods>
 {
-    public virtual ChangeTrackingList<SubState> Tags { get; set; } = [];
+    public Goods()
+    {
+        Tags = [];
+    }
+
+    public partial ChangeTrackingList<SubState> Tags { get; set; }
 }
 
 [ChangeTracking]
-public class SubState
+public partial class SubState
 {
-    public virtual string? Tag { get; set; }
+    public partial string? Tag { get; set; }
 }
 ```
 
 ```c#
-// Bind Tags with scope `ChangeTrackingScope.Root`, it's default value
+// Watch Tags with scope `ChangeTrackingScope.Root`, it's default value
 // The state will push last value when you subscribed
 // ouput: Tags count has changed 0
-var disposable = state.Bind(
+var disposable = tracker.Watch(
     selector: x => x.Tags, 
     subscriber: x => Console.WriteLine($"Tags count has changed: {x.Count}"), 
     scope: ChangeTrackingScope.Root);
 
 // output: Tags count has changed: 1
-state.Update(x => x.Tags.Add(new SubState { Tag = "first tag" }));
+state.Tags.Add(new SubState { Tag = "first tag" });
+state.AcceptChanges();
 
 // no output, because Tags property is not changed
-state.Update(x => x.Tags[0].Tag = "first tag has modified");
+state.Tags[0].Tag = "first tag has modified";
+state.AcceptChanges();
 
 disposable.Dispose();
 
-// Bind Tags with scope `ChangeTrackingScope.Cascading`
+// Watch Tags with scope `ChangeTrackingScope.Cascading`
 // The state will push last value when you subscribed
 // ouput: Tags value has changed: first tag has modified
-state.Bind(
+tracker.Watch(
     selector: x => x.Tags,
     subscriber: x => Console.WriteLine($"Tags value has changed: {x[0].Tag}"),
     scope: ChangeTrackingScope.Cascading);
 
 // ouput: Tags value has changed: first tag has modified * 2
-state.Update(x => x.Tags[0].Tag = "first tag has modified * 2");
-```
-
-## Reactive(Rx) Supports
-State implement `IObservable<T>`, so you can use Rx framework like `System.Reactive`,  
-*Note: States does not have a dependency on System.Reactive.*
-
-```c#
-using System.Reactive.Linq;
-
-State<Goods> state = new(new Goods
-{
-    Count = 5,
-});
-
-// The state will push last value when you subscribed
-// ouput: 5
-state
-    .Where(x => x.Count >= 5)
-    .Select(x => x.Count)
-    .DistinctUntilChanged()
-    .Subscribe(x => Console.WriteLine(x));
-
-// no ouput
-state.Update(x => x.Count = 2);
-
-// ouput 10
-state.Update(x => x.Count = 10);
+state.Tags[0].Tag = "first tag has modified * 2";
+state.AcceptChanges();
 ```
 
 ## Merge Changes
 
 Some times we need to merge all changes, 
-you can use `SubscribeBindingChanged`
+you can use `OnChange`
 
 ```c#
-int count = 0;
-double price = 0;
-State<Goods> state = new(new Goods());
 
-state.Bind(x => x.Count, x => count = x);
-state.Bind(x => x.Price, x => price = x);
+MyState state = new MyState();
+var tracker = state.CreateTracker();
 
-state.SubscribeBindingChanged(state =>
+tracker.Watch(x => x.Count);
+tracker.Watch(x => x.Price);
+
+tracker.OnChange(state =>
 {
     Console.WriteLine($"Count or Price has changed. Count={count}, Price={state.Price}");
 });
 
 //ouput: Count or Price has changed
-state.Update(x =>
-{
-    x.Price = 3.14;
-    x.Count = 10;
-});
+state.Price = 3.14;
+state.Count = 10;
+state.AcceptChanges();
 
 //no output, because Count has not changed
-state.Update(x => x.Count = 10);
+state.Count = 10;
+state.AcceptChanges();
 
 //no output, because property Number has not subscribed 
-state.Update(x => x.Number = 3);
+state.Number = 3;
+state.AcceptChanges();
 
 //ouput: Count or Price has changed
-state.Update(x => x.Count = 11);
+state.Count = 11;
+state.AcceptChanges();
 ```
 
 ## DependencyInjection
 
-Using `AddState` to inject state, `ServiceLifetime.Scoped` is default value
-```c#
-var services = new ServiceCollection()
-    .AddState<GoodsState>(ServiceLifetime.Singleton)
-    .AddState<CustomerState>(ServiceLifetime.Singleton)
-    .BuildServiceProvider();
-
-var state = services.GetRequiredService<State<GoodsState>>();    
-```
-
-Using `StateInjectAttribute` to inject state,
-`Source Generator` generated.
+The State class only has a parameterless constructor, making it easy to use dependency injection.
 
 ```c#
-var services = new ServiceCollection().AddStateInjection().BuildServiceProvider();
-var state = services.GetRequiredService<State<GoodsState>>();
 
-[StateInject(ServiceLifetime.Singleton)]
 [ChangeTracking]
-public class GoodsState
+public partial class MyState(ILogger<MyState> logger) : State<MyState>
 {
-    public virtual double Price { get; set; }
-    public virtual int Count { get; set; }
+    public partial int Count { get; set; }
+
+    public void Increment()
+    {
+        Count++;
+        State.AcceptChanges();
+        logger.LogInformation("Count Increment");
+    }
 }
+
+var services = new ServiceCollection();
+services.AddLogging();
+services.AddScoped<Goods>();
+services.AddSingleton<MyState>();
 ```
 
-## Dispose & State Scope
+## Dispose & Unsubscribe
 
 In most usage scenarios, when your page or component subscribes to the state, it must explicitly unsubscribe when the component is destroyed, otherwise it will result in a significant resource consumption.
 
 ```c#
-State<Goods> state = new(new Goods());
+Goods state = new();
+var tracker = state.CreateTracker();
+var disposable1 = state.Watch(x => x.Count);
+var disposable2 = state.Watch(x => x.Tags.Count);
+var disposable3 = state.OnChange(x => { });
 
-var disposable1 = state.Bind(x => x, x => {});
-var disposable2 = state.Bind(x => x, x => {});
-var disposable3 = state.SubscribeBindingChanged(() => { });
-
-disposable1.Dispose();
-disposable2.Dispose();
-disposable3.Dispose();
-```
-
-Of course, you can directly destroy the State object,
-However, in most cases, 
-the lifecycle of `State` needs to be consistent with the user session lifecycle,
-so directly destroying `State` does not align with the application scenario.
-
-```c#
-state.Dispose();
-```
-
-To facilitate management, you can create an `IScopedState` by calling the `CreateScope` method.
-In dependency injection, whether it is `ServiceLifetime.Singleton` or `ServiceLifetime.Scoped`, IScopedState is always `Transient`. `IScopedState` is more like a state view.
-
-```c#
-State<Goods> state = new(new Goods());
-Assert.IsTrue(state.IsRoot);
-
-IScopedState<GoodsState> scopedState = State.CreateScope();
-Assert.IsFalse(scoped.IsRoot);
-// bind or update
-
-scopedState.Dispose();
+disposable1.Dispose(); // unsubscribe: Count property watch
+disposable2.Dispose(); // unsubscribe: Tags.Count property watch
+disposable3.Dispose(); // unsubscribe: merge changed subscribe
+tracker.Dispose(); // dispose tracker
 ```
 
 ## Blazor
@@ -269,51 +264,55 @@ You can use `States` in `Blazor`, it supports `AOT` compilation
 **WebAssembly or Hybird**
 
 ```c#
-services.AddState<GoodsState>(ServiceLifetime.Singleton);
+services.AddSingleton<Goods>();
 ```
 
 **Server**
 
 ```c#
-services.AddState<GoodsState>(ServiceLifetime.Scoped);
+services.AddScoped<Goods>(ServiceLifetime.Scoped);
 ```
 
 **Inject state into component**
-```c#
-@inject IScopedState<MyState> State
+```razor
+@inject Goods State
 @implements IDisposable
 
-<h1>Count: @Count</h1>
+<h1>Count: @State.Count</h1>
 <button @onclick="Click">Add</button>
 
 @code{
-    private int Count;
+    private IChangeTracker Tracker;
 
     protected override void OnInitialized()
     {
-        State.Bind(x => x.Count, x => Count = x);
-        State.SubscribeBindingChanged(StateHasChanged);
+        Tracker = State.CreateTracker();
+        Tracker.Watch(x => x.Count);
+        Tracker.OnChange(StateHasChanged);
     }
 
     private void Click()
     {
-        State.Update(x => x.Count++);
+        State.Count++;
+        State.AcceptChanges();
     }
 
     public void Dispose()
     {
-        State.Dispose();
+        Tracker.Dispose();
     }
 }
 ```
 
-You can use the Blux library to simplify this process, more information see [**Blux**](https://github.com/SourceGeneration/Blux) repo
+You can use the SourceGeneration.Blazor library to simplify this process, more information see [**SourceGeneration.Blazor.Statity**](https://github.com/SourceGeneration/Blazor) repo
+
+[![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.Blazor.Statity.svg)](https://www.nuget.org/packages/SourceGeneration.Blazor.Statity)
 
 ```c#
-@inherits BluxComponentBase
-@inject IScopedState<MyState> State
+@inherits StateComponentBase
+@inject Goods State
 
-<h1>Count: @Count</h1>
+<h1>Count: @State.Count</h1>
 <button @onclick="Click">Add</button>
 
 @code{
@@ -321,12 +320,13 @@ You can use the Blux library to simplify this process, more information see [**B
 
     protected override void OnStateBinding()
     {
-        State.Bind(x => x.Count, x => Count = x);
+        Watch(State, x => x.Count);
     }
 
     private void Click()
     {
-        State.Update(x => x.Count++);
+        State.Count++;
+        State.AcceptChanges();
     }
 }
 
