@@ -5,6 +5,7 @@ namespace SourceGeneration.ChangeTracking;
 public interface IChangeTracker : IDisposable
 {
     IDisposable OnChange(Action subscriber);
+    void AcceptChanges();
 }
 
 public interface IChangeTracker<TState> : IChangeTracker where TState : class
