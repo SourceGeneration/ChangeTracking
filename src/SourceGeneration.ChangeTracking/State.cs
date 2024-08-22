@@ -3,13 +3,13 @@ using System.ComponentModel;
 
 namespace SourceGeneration.ChangeTracking;
 
-public class State<TSelf> : IState<TSelf> where TSelf : State<TSelf>
+public class State
 {
-    private ImmutableArray<ChangeTracker<TSelf>> _trackers = [];
+    private ImmutableArray<IChangeTracker> _trackers = [];
 
-    public IChangeTracker<TSelf> CreateTracker()
+    public IChangeTracker<TState> CreateTracker<TState>(TState state) where TState : class
     {
-        var tracker = new ChangeTracker<TSelf>((TSelf)this, x => _trackers = _trackers.Remove(x));
+        var tracker = new ChangeTracker<TState>(state, x => _trackers = _trackers.Remove(x));
         _trackers = _trackers.Add(tracker);
         return tracker;
     }
@@ -28,3 +28,9 @@ public class State<TSelf> : IState<TSelf> where TSelf : State<TSelf>
         }
     }
 }
+
+public class State<TSelf> : State where TSelf : State<TSelf>
+{
+    public IChangeTracker<TSelf> CreateTracker() => CreateTracker((TSelf)this);
+}
+
