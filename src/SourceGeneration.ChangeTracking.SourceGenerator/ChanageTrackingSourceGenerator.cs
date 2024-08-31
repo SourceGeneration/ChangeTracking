@@ -247,11 +247,31 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
             foreach (var property in typeProxy.Properties)
             {
-                var required = property.Required ? "required " : string.Empty;
+                StringBuilder modifers = new();
+
+                modifers.Append(property.Accessibility switch
+                {
+                    Accessibility.Public => "public ",
+                    Accessibility.Protected => "protected ",
+                    Accessibility.Internal => "internal ",
+                    Accessibility.ProtectedOrInternal => "protected internal ",
+                    Accessibility.ProtectedAndInternal => "protected internal ",
+                    _ => "private "
+                });
+
+                if (property.IsSealed) modifers.Append("sealed ");
+
+                if (property.IsVirtual)
+                    modifers.Append("virtual ");
+                else if (property.IsOverride)
+                    modifers.Append("override ");
+
+                if(property.IsRequired)
+                    modifers.Append("required ");
 
                 builder.AppendLine($"private {property.Type} {property.FieldName};");
 
-                builder.AppendBlock($"public {required}partial {property.Type} {property.PropertyName}", () =>
+                builder.AppendBlock($"{modifers}partial {property.Type} {property.PropertyName}", () =>
                 {
                     builder.AppendLine($"get => {property.FieldName};");
 
@@ -434,9 +454,15 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 type.IsTupleType ||
                 typeName == "string")
             {
-                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName, property.IsRequired)
+                
+                return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName)
                 {
+                    Accessibility = property.DeclaredAccessibility,
                     IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                    IsRequired = property.IsRequired,
+                    IsOverride = property.IsOverride,
+                    IsSealed = property.IsSealed,
+                    IsVirtual = property.IsVirtual,
                 };
             }
 
@@ -446,9 +472,14 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
                 if (definition == "global::System.Collections.Generic.IDictionary<TKey, TValue>")
                 {
-                    return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName, property.IsRequired)
+                    return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName)
                     {
+                        Accessibility = property.DeclaredAccessibility,
                         IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                        IsRequired = property.IsRequired,
+                        IsOverride = property.IsOverride,
+                        IsSealed = property.IsSealed,
+                        IsVirtual = property.IsVirtual,
                         KeyType = namedType.TypeArguments[0].GetFullName(),
                         ElementType = namedType.TypeArguments[1].GetFullName(),
                         NotifyCollectionChanged = true,
@@ -460,9 +491,14 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                          definition == "global::System.Collections.Generic.ICollection<T>" ||
                          definition == "global::System.Collections.Generic.IEnumerable<T>")
                 {
-                    return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName, property.IsRequired)
+                    return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName)
                     {
+                        Accessibility = property.DeclaredAccessibility,
                         IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                        IsRequired = property.IsRequired,
+                        IsOverride = property.IsOverride,
+                        IsSealed = property.IsSealed,
+                        IsVirtual = property.IsVirtual,
                         ElementType = namedType.TypeArguments[0].GetFullName(),
                         NotifyCollectionChanged = true,
                         NotifyPropertyChanged = true,
@@ -473,9 +509,14 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
             if (type.HasAttribute(ChangeTrackingAttribute))
             {
-                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsRequired)
+                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName)
                 {
+                    Accessibility = property.DeclaredAccessibility,
                     IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                    IsRequired = property.IsRequired,
+                    IsOverride = property.IsOverride,
+                    IsSealed = property.IsSealed,
+                    IsVirtual = property.IsVirtual,
                     NotifyCollectionChanged = true,
                     NotifyPropertyChanging = true,
                     NotifyPropertyChanged = true,
@@ -485,9 +526,15 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
             else
             {
                 CheckPropertyInterface(type, out bool notifyPropertyChanging, out bool notifyPropertyChanged, out bool notifyCollectionChanged, out bool changeTracking);
-                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName, property.IsRequired)
+                return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName)
                 {
+                    Accessibility = property.DeclaredAccessibility,
                     IsInitOnly = property.SetMethod?.IsInitOnly == true,
+                    IsRequired = property.IsRequired,
+                    IsOverride = property.IsOverride,
+                    IsSealed = property.IsSealed,
+                    IsVirtual = property.IsVirtual,
+
                     NotifyCollectionChanged = notifyCollectionChanged,
                     NotifyPropertyChanging = notifyPropertyChanging,
                     NotifyPropertyChanged = notifyPropertyChanged,
@@ -575,13 +622,11 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
     private sealed class PropertyDefinition
     {
-        public PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type, bool required)
+        public PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type)
         {
             Kind = proxyKind;
             PropertyName = propertyName;
             Type = type;
-            Required = required;
-
             FieldName = "__" + char.ToLower(PropertyName[0]) + propertyName.Substring(1);
         }
 
@@ -589,8 +634,13 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         public readonly string PropertyName;
         public readonly string Type;
         public readonly TypeProxyKind Kind;
-        public readonly bool Required;
+
+        public Accessibility Accessibility;
+        public bool IsRequired;
         public bool IsInitOnly;
+        public bool IsVirtual;
+        public bool IsSealed;
+        public bool IsOverride;
 
         public string? KeyType;
         public string? ElementType;
