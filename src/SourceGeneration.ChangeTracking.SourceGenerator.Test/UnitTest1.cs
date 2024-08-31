@@ -15,6 +15,7 @@ using System.Collections.Generic;
 public partial class GenericType<T>
 {
     public partial int A { get; set; }
+    public new partial int NewProperty { get; set; }
 }
 
 
