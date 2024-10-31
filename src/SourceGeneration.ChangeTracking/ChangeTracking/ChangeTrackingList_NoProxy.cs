@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace SourceGeneration.ChangeTracking;
 
-public class ChangeTrackingList<T> : ChangeTrackingObjectBase, IList<T>
+public class ChangeTrackingList<T> : ChangeTrackingObjectBase, IList<T>, IReadOnlyList<T>
 {
     private readonly List<T> _list = [];
 
