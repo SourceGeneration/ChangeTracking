@@ -11,7 +11,7 @@ This library uses C# preview features `partial property`, Before using this libr
 - To enable C# language preview in your project, add the following to your .csproj file
 ```c#
 <PropertyGroup>  
-  <LangVersion>preview</LangVersion>  
+  <LangVersion>13</LangVersion>  
 </PropertyGroup>  
 ```
 
