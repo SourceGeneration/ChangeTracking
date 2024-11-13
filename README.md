@@ -16,11 +16,11 @@ This library uses C# preview features `partial property`, Before using this libr
 ```
 
 ```powershell
-Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta2.240822.1
+Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta3.241113.1
 ```
 
 ```powershell
-dotnet add package SourceGeneration.ChangeTracking --version 1.0.0-beta2.240822.1
+dotnet add package SourceGeneration.ChangeTracking --version 1.0.0-beta3.241113.1
 ```
 
 ## Start
