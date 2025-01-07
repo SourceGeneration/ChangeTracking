@@ -242,7 +242,6 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 });
             }
 
-
             builder.AppendLine();
 
             foreach (var property in typeProxy.Properties)
@@ -269,11 +268,11 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 if(property.IsRequired)
                     modifers.Append("required ");
 
-                builder.AppendLine($"private {property.Type} {property.FieldName};");
+                //builder.AppendLine($"private {property.Type} {property.FieldName};");
 
                 builder.AppendBlock($"{modifers}partial {property.Type} {property.PropertyName}", () =>
                 {
-                    builder.AppendLine($"get => {property.FieldName};");
+                    builder.AppendLine($"get;");
 
                     builder.AppendBlock(property.IsInitOnly ? "init" : "set", () =>
                     {
@@ -287,23 +286,23 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
     private static void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
     {
-        builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals({property.FieldName}, value))", () =>
+        builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(field, value))", () =>
         {
             builder.AppendLine($"OnPropertyChanging(\"{property.PropertyName}\");");
 
             if (property.Kind == TypeProxyKind.Value)
             {
-                builder.AppendLine($"{property.FieldName} = value;");
+                builder.AppendLine($"field = value;");
             }
             else
             {
                 if (property.NotifyPropertyChanging || property.NotifyPropertyChanged || property.NotifyCollectionChanged)
                 {
-                    builder.AppendBlock($"if ({property.FieldName} is not null)", () =>
+                    builder.AppendBlock($"if (field is not null)", () =>
                     {
                         if (property.NotifyPropertyChanging)
                         {
-                            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanging){property.FieldName}).PropertyChanging -= OnPropertyChanging;");
+                            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanging)field).PropertyChanging -= OnPropertyChanging;");
                             //builder.AppendBlock($"if ({property.FieldName} is global::System.ComponentModel.INotifyPropertyChanging __propertyChanging__)", () =>
                             //{
                             //    builder.AppendLine("__propertyChanging__.PropertyChanging -= OnPropertyChanging;");
@@ -311,7 +310,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                         }
                         if (property.NotifyPropertyChanged)
                         {
-                            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged){property.FieldName}).PropertyChanged -= OnPropertyChanged;");
+                            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)field).PropertyChanged -= OnPropertyChanged;");
                             //builder.AppendBlock($"if ({property.FieldName} is global::System.ComponentModel.INotifyPropertyChanged __propertyChanged__)", () =>
                             //{
                             //    builder.AppendLine("__propertyChanged__.PropertyChanged -= OnPropertyChanged;");
@@ -319,7 +318,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                         }
                         if (property.NotifyCollectionChanged)
                         {
-                            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged){property.FieldName}).CollectionChanged -= OnCollectionChanged;");
+                            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)field).CollectionChanged -= OnCollectionChanged;");
                             //builder.AppendBlock($"if ({property.FieldName} is global::System.Collections.Specialized.INotifyCollectionChanged __collectionChanged__)", () =>
                             //{
                             //    builder.AppendLine("__collectionChanged__.CollectionChanged -= OnCollectionChanged;");
@@ -331,7 +330,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
                 builder.AppendBlock("if (value is null)", () =>
                 {
-                    builder.AppendLine($"{property.FieldName} = null;");
+                    builder.AppendLine($"field = null;");
                 });
                 builder.AppendBlock("else", () =>
                 {
@@ -354,32 +353,32 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
     {
         if (property.Kind == TypeProxyKind.Collection)
         {
-            builder.AppendLine($"{property.FieldName} = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
+            builder.AppendLine($"field = new global::{RootNamespace}.ChangeTrackingList<{property.ElementType}>(value);");
         }
         else if (property.Kind == TypeProxyKind.Dictionary)
         {
-            builder.AppendLine($"{property.FieldName} = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
+            builder.AppendLine($"field = new global::{RootNamespace}.ChangeTrackingDictionary<{property.KeyType}, {property.ElementType}>(value);");
         }
         else
         {
-            builder.AppendLine($"{property.FieldName} = value;");
+            builder.AppendLine($"field = value;");
         }
 
         if (property.NotifyPropertyChanging)
         {
-            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanging){property.FieldName}).PropertyChanging += OnPropertyChanging;");
+            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanging)field).PropertyChanging += OnPropertyChanging;");
         }
         if (property.NotifyPropertyChanged)
         {
-            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged){property.FieldName}).PropertyChanged += OnPropertyChanged;");
+            builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)field).PropertyChanged += OnPropertyChanged;");
         }
         if (property.NotifyCollectionChanged)
         {
-            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged){property.FieldName}).CollectionChanged += OnCollectionChanged;");
+            builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)field).CollectionChanged += OnCollectionChanged;");
         }
         if (property.ChangeTracking)
         {
-            builder.AppendLine($"__cascadingChanged |= ((global::System.ComponentModel.IChangeTracking){property.FieldName}).IsChanged;");
+            builder.AppendLine($"__cascadingChanged |= ((global::System.ComponentModel.IChangeTracking)field).IsChanged;");
         }
     }
 
@@ -620,20 +619,12 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         public readonly List<PropertyDefinition> Properties = [];
     }
 
-    private sealed class PropertyDefinition
+    private sealed class PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type)
     {
-        public PropertyDefinition(TypeProxyKind proxyKind, string propertyName, string type)
-        {
-            Kind = proxyKind;
-            PropertyName = propertyName;
-            Type = type;
-            FieldName = "__" + char.ToLower(PropertyName[0]) + propertyName.Substring(1);
-        }
-
-        public readonly string FieldName;
-        public readonly string PropertyName;
-        public readonly string Type;
-        public readonly TypeProxyKind Kind;
+        //public readonly string FieldName = "__" + char.ToLower(PropertyName[0]) + propertyName.Substring(1);
+        public readonly string PropertyName = propertyName;
+        public readonly string Type = type;
+        public readonly TypeProxyKind Kind = proxyKind;
 
         public Accessibility Accessibility;
         public bool IsRequired;
