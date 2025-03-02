@@ -14,8 +14,9 @@ using System.Collections.Generic;
 [ChangeTracking]
 public partial class GenericType<T>
 {
-    public partial int A { get; set; }
-    public new partial int NewProperty { get; set; }
+    //public partial int A { get; set; } = 1;
+    public partial ChangeTrackingList<int> B { get; set; } 
+    //public new partial int NewProperty { get; set; } = 1;
 }
 
 
