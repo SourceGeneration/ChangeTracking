@@ -10,7 +10,9 @@ public class ChangeTrackingList<T> : ChangeTrackingObjectBase, IList<T>, IReadOn
 {
     private readonly List<T> _list = [];
 
-    public ChangeTrackingList(IEnumerable<T>? list = null)
+    public ChangeTrackingList() { }
+
+    public ChangeTrackingList(IEnumerable<T>? list)
     {
         if (list != null)
         {
