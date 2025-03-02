@@ -241,7 +241,12 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                     builder.AppendLine("__AcceptChanges();");
                 });
             }
+            builder.AppendLine();
 
+            foreach (var property in typeProxy.Properties.Where(x => x.HasInitializer))
+            {
+                builder.AppendLine($"private bool ___s_{property.PropertyName}___;");
+            }
             builder.AppendLine();
 
             foreach (var property in typeProxy.Properties)
@@ -265,14 +270,17 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 else if (property.IsOverride)
                     modifers.Append("override ");
 
-                if(property.IsRequired)
+                if (property.IsRequired)
                     modifers.Append("required ");
 
                 //builder.AppendLine($"private {property.Type} {property.FieldName};");
 
                 builder.AppendBlock($"{modifers}partial {property.Type} {property.PropertyName}", () =>
                 {
-                    builder.AppendLine($"get;");
+                    builder.AppendBlock("get", () =>
+                    {
+                        EmitGetMethod(builder, property);
+                    });
 
                     builder.AppendBlock(property.IsInitOnly ? "init" : "set", () =>
                     {
@@ -284,8 +292,44 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         });
     }
 
+    private static void EmitGetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
+    {
+        if (property.HasInitializer)
+        {
+            builder.AppendBlock($"if (!___s_{property.PropertyName}___ && field is not null)", () =>
+            {
+                builder.AppendLine($"___s_{property.PropertyName}___ = true;");
+
+                if (property.NotifyPropertyChanging)
+                {
+                    builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanging)field).PropertyChanging += OnPropertyChanging;");
+                }
+                if (property.NotifyPropertyChanged)
+                {
+                    builder.AppendLine($"((global::System.ComponentModel.INotifyPropertyChanged)field).PropertyChanged += OnPropertyChanged;");
+                }
+                if (property.NotifyCollectionChanged)
+                {
+                    builder.AppendLine($"((global::System.Collections.Specialized.INotifyCollectionChanged)field).CollectionChanged += OnCollectionChanged;");
+                }
+                if (property.ChangeTracking)
+                {
+                    builder.AppendLine($"__cascadingChanged |= ((global::System.ComponentModel.IChangeTracking)field).IsChanged;");
+                }
+
+            });
+        }
+
+        builder.AppendLine($"return field;");
+    }
+
     private static void EmitSetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
     {
+        if (property.HasInitializer)
+        {
+            builder.AppendLine($"___s_{property.PropertyName}___ = true;");
+        }
+
         builder.AppendBlock($"if (!global::System.Collections.Generic.EqualityComparer<{property.Type}>.Default.Equals(field, value))", () =>
         {
             builder.AppendLine($"OnPropertyChanging(\"{property.PropertyName}\");");
@@ -418,6 +462,20 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
             var propertyDefinition = CreateProperty(property);
             if (propertyDefinition != null)
             {
+                if ((propertyDefinition.NotifyCollectionChanged ||
+                    propertyDefinition.NotifyPropertyChanging ||
+                    propertyDefinition.NotifyPropertyChanged ||
+                    propertyDefinition.ChangeTracking) &&
+                    property.DeclaringSyntaxReferences.Length > 0)
+                {
+                    var node = property.DeclaringSyntaxReferences[0].GetSyntax(cancellationToken);
+                    if(node is PropertyDeclarationSyntax propertySyntax)
+                    {
+                        propertyDefinition.HasInitializer = propertySyntax.Initializer != null;
+                    }
+                    //propertyDefinition.HasDeclaring = true;
+                }
+
                 typeProxy.Properties.Add(propertyDefinition);
             }
         }
@@ -453,7 +511,6 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 type.IsTupleType ||
                 typeName == "string")
             {
-                
                 return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName)
                 {
                     Accessibility = property.DeclaredAccessibility,
@@ -632,6 +689,8 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         public bool IsVirtual;
         public bool IsSealed;
         public bool IsOverride;
+
+        public bool HasInitializer;
 
         public string? KeyType;
         public string? ElementType;
