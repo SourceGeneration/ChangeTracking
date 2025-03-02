@@ -5,13 +5,15 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>12</LangVersion>
 
-		<Version>1.0.0-beta4.250107.1</Version>
+		<Version>1.0.0-beta4.250302.1</Version>
 		<Authors>SourceGeneration</Authors>
 		<Description>ChangeTracking is a object change tracking and state management framework based on Source Generator, supports AOT compilation.</Description>
 		<RepositoryUrl>https://github.com/SourceGeneration/ChangeTracking</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/SourceGeneration/ChangeTracking</PackageProjectUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageOutputPath>./../../../nupkg</PackageOutputPath>
 		<PackageIcon>sg.png</PackageIcon>
 		<PackageTags>state,change tracking,proerpty changed,collection changed,source generation</PackageTags>
@@ -28,6 +30,8 @@
 			<PackagePath>\</PackagePath>
 			<Visible>false</Visible>
 		</None>
+		<None Include=".\..\..\README.md" Pack="true" PackagePath="\"/>
+
 	</ItemGroup>
 
 	<ItemGroup>
