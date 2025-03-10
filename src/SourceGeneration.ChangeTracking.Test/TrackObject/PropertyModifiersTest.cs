@@ -24,6 +24,19 @@ public partial class PropertyModifiersTestObject : PropertyModifiersTestObjectBa
 
     private partial int PrivateProperty { get; set; }
 
+    public partial string InternalSetProperty { get; internal set; }
+    public partial string PrivateSetProperty { get; private set; }
+    public partial string ProtectedSetProperty { get; protected set; }
+    public partial string ProtectedInternalSetProperty { get; protected internal set; }
+
+    public partial string ReadOnlyProperty { get; }
+    public partial string WriteOnlyProperty { set; }
+    public partial string InternalGetProperty { internal get; set; }
+    public partial string PrivateGetProperty { private get; set; }
+    public partial string ProtectedGetProperty { protected get; set; }
+    public partial string ProtectedInternalGetProperty { protected internal get; set; }
+
+
     //public new partial int NewProperty { get; set; }
 
 }
