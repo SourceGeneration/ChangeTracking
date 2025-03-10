@@ -253,15 +253,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
             {
                 StringBuilder modifers = new();
 
-                modifers.Append(property.Accessibility switch
-                {
-                    Accessibility.Public => "public ",
-                    Accessibility.Protected => "protected ",
-                    Accessibility.Internal => "internal ",
-                    Accessibility.ProtectedOrInternal => "protected internal ",
-                    Accessibility.ProtectedAndInternal => "protected internal ",
-                    _ => "private "
-                });
+                modifers.Append(GetPropertyAccessibilityString(property.Accessibility));
 
                 if (property.IsSealed) modifers.Append("sealed ");
 
@@ -277,19 +269,50 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
                 builder.AppendBlock($"{modifers}partial {property.Type} {property.PropertyName}", () =>
                 {
-                    builder.AppendBlock("get", () =>
+                    if (property.GetAccessibility.HasValue)
                     {
-                        EmitGetMethod(builder, property);
-                    });
+                        string? getAccessibility = null;
+                        if (property.GetAccessibility.Value != property.Accessibility)
+                        {
+                            getAccessibility = GetPropertyAccessibilityString(property.GetAccessibility.Value);
+                        }
 
-                    builder.AppendBlock(property.IsInitOnly ? "init" : "set", () =>
+                        builder.AppendBlock($"{getAccessibility}get", () =>
+                        {
+                            EmitGetMethod(builder, property);
+                        });
+
+                    }
+                    if (property.SetAccessibility.HasValue)
                     {
-                        EmitSetMethod(builder, property);
-                    });
+                        string? setAccessibility = null;
+                        if (property.SetAccessibility.Value != property.Accessibility)
+                        {
+                            setAccessibility = GetPropertyAccessibilityString(property.SetAccessibility.Value);
+                        }
+
+                        builder.AppendBlock(property.IsInitOnly ? $"{setAccessibility}init" : $"{setAccessibility}set", () =>
+                        {
+                            EmitSetMethod(builder, property);
+                        });
+                    }
                 });
                 builder.AppendLine();
             }
         });
+    }
+
+    private static string GetPropertyAccessibilityString(Accessibility accessibility)
+    {
+        return accessibility switch
+        {
+            Accessibility.Public => "public ",
+            Accessibility.Protected => "protected ",
+            Accessibility.Internal => "internal ",
+            Accessibility.ProtectedOrInternal => "protected internal ",
+            Accessibility.ProtectedAndInternal => "protected internal ",
+            _ => "private "
+        };
     }
 
     private static void EmitGetMethod(CSharpCodeBuilder builder, PropertyDefinition property)
@@ -439,7 +462,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
 
         var properties = type.GetMembers()
             .OfType<IPropertySymbol>()
-            .Where(x => !x.IsReadOnly && !x.IsStatic && !x.IsWriteOnly && x.IsPartialDefinition);
+            .Where(x => !x.IsStatic && x.IsPartialDefinition);
 
         string name;
         if (type.TypeParameters != null && type.TypeParameters.Length > 0)
@@ -469,7 +492,7 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                     property.DeclaringSyntaxReferences.Length > 0)
                 {
                     var node = property.DeclaringSyntaxReferences[0].GetSyntax(cancellationToken);
-                    if(node is PropertyDeclarationSyntax propertySyntax)
+                    if (node is PropertyDeclarationSyntax propertySyntax)
                     {
                         propertyDefinition.HasInitializer = propertySyntax.Initializer != null;
                     }
@@ -514,6 +537,9 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 return new PropertyDefinition(TypeProxyKind.Value, propertyName, typeName)
                 {
                     Accessibility = property.DeclaredAccessibility,
+                    GetAccessibility = property.GetMethod?.DeclaredAccessibility,
+                    SetAccessibility = property.SetMethod?.DeclaredAccessibility,
+
                     IsInitOnly = property.SetMethod?.IsInitOnly == true,
                     IsRequired = property.IsRequired,
                     IsOverride = property.IsOverride,
@@ -531,6 +557,9 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                     return new PropertyDefinition(TypeProxyKind.Dictionary, propertyName, typeName)
                     {
                         Accessibility = property.DeclaredAccessibility,
+                        GetAccessibility = property.GetMethod?.DeclaredAccessibility,
+                        SetAccessibility = property.SetMethod?.DeclaredAccessibility,
+
                         IsInitOnly = property.SetMethod?.IsInitOnly == true,
                         IsRequired = property.IsRequired,
                         IsOverride = property.IsOverride,
@@ -550,6 +579,9 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                     return new PropertyDefinition(TypeProxyKind.Collection, propertyName, typeName)
                     {
                         Accessibility = property.DeclaredAccessibility,
+                        GetAccessibility = property.GetMethod?.DeclaredAccessibility,
+                        SetAccessibility = property.SetMethod?.DeclaredAccessibility,
+
                         IsInitOnly = property.SetMethod?.IsInitOnly == true,
                         IsRequired = property.IsRequired,
                         IsOverride = property.IsOverride,
@@ -568,6 +600,9 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName)
                 {
                     Accessibility = property.DeclaredAccessibility,
+                    GetAccessibility = property.GetMethod?.DeclaredAccessibility,
+                    SetAccessibility = property.SetMethod?.DeclaredAccessibility,
+
                     IsInitOnly = property.SetMethod?.IsInitOnly == true,
                     IsRequired = property.IsRequired,
                     IsOverride = property.IsOverride,
@@ -585,6 +620,9 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
                 return new PropertyDefinition(TypeProxyKind.Object, propertyName, typeName)
                 {
                     Accessibility = property.DeclaredAccessibility,
+                    GetAccessibility = property.GetMethod?.DeclaredAccessibility,
+                    SetAccessibility = property.SetMethod?.DeclaredAccessibility,
+
                     IsInitOnly = property.SetMethod?.IsInitOnly == true,
                     IsRequired = property.IsRequired,
                     IsOverride = property.IsOverride,
@@ -683,7 +721,11 @@ public partial class ChanageTrackingSourceGenerator : IIncrementalGenerator
         public readonly string Type = type;
         public readonly TypeProxyKind Kind = proxyKind;
 
+
         public Accessibility Accessibility;
+        public Accessibility? GetAccessibility;
+        public Accessibility? SetAccessibility;
+
         public bool IsRequired;
         public bool IsInitOnly;
         public bool IsVirtual;
