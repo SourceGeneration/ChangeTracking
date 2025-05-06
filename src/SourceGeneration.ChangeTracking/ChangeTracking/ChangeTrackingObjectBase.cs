@@ -6,6 +6,8 @@ namespace SourceGeneration.ChangeTracking;
 
 public abstract class ChangeTrackingObjectBase : ICascadingChangeTracking, INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
 {
+    public ChangeTrackingObjectBase() { }
+
     protected bool _cascadingChanged;
     protected bool _baseChanged;
 
