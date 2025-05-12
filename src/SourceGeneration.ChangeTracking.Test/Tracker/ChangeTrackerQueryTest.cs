@@ -197,29 +197,28 @@ public partial class ChangeTrackerQueryTest
         var state = new TrackingTarget();
         ChangeTracker<TrackingTarget> tracker = new(state);
 
-        bool changed = false;
+        int changes = 0;
         var disposable1 = tracker.Watch<ChangeTrackingList<TrackingObject>, TrackingObject>(x => x.ObjectList, x => x.Value > 5, scope: ChangeTrackingScope.Cascading);
 
-        tracker.OnChange(() => changed = true);
+        tracker.OnChange(() => changes++);
 
         state.ObjectList.Add(new TrackingObject
         {
             Value = 1,
         });
         tracker.AcceptChanges();
-        Assert.IsFalse(changed);
+        Assert.AreEqual(0, changes);
 
         state.ObjectList.Add(new TrackingObject
         {
             Value = 6,
         });
         tracker.AcceptChanges();
-        Assert.IsTrue(changed);
+        Assert.AreEqual(1, changes);
 
-        changed = false;
         state.ObjectList[1].Text = "a";
         tracker.AcceptChanges();
-        Assert.IsTrue(changed);
+        Assert.AreEqual(2, changes);
 
     }
 
@@ -229,27 +228,27 @@ public partial class ChangeTrackerQueryTest
         var state = new TrackingTarget();
         ChangeTracker<TrackingTarget> tracker = new(state);
 
-        bool changed = false;
+        int changes = 0;
         var disposable = tracker.Watch<ChangeTrackingList<int>, int>(x => x.List, x => x > 5);
 
-        tracker.OnChange(() => changed = true);
+        tracker.OnChange(() => changes++);
         state.List.Add(1);
         tracker.AcceptChanges();
-        Assert.IsFalse(changed);
+        Assert.AreEqual(0, changes);
 
         state.List.Add(6);
         tracker.AcceptChanges();
-        Assert.IsTrue(changed);
+        Assert.AreEqual(1, changes);
 
         state.List = [];
 
-        changed = false;
         state.List.Add(1);
         tracker.AcceptChanges();
-        Assert.IsFalse(changed);
+        Assert.AreEqual(1, changes);
+
         state.List.Add(8);
         tracker.AcceptChanges();
-        Assert.IsTrue(changed);
+        Assert.AreEqual(2, changes);
     }
 
 
