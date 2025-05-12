@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 
@@ -73,6 +75,21 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         return new Disposable(() => _watches = _watches.Remove(subscription));
     }
 
+
+    public IDisposable Watch<TCollection, TItem>(Func<TState, TCollection> selector, Func<TItem, bool> predicate, Action<IEnumerable<TItem>>? subscriber = null, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+        where TCollection : IEnumerable<TItem>, INotifyCollectionChanged
+    {
+        var subscription = new CollectionSubscription<TCollection, TItem>(State, selector, predicate, subscriber, scope);
+
+        _watches = _watches.Add(subscription);
+
+        return new Disposable(() =>
+        {
+            subscription.Dispose();
+            _watches = _watches.Remove(subscription);
+        });
+    }
+
     public IDisposable OnChange(Action subscriber) => OnChange(_ => subscriber());
 
     public IDisposable OnChange(Action<TState> subscriber)
@@ -86,6 +103,137 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         _subscribers = _subscribers.Clear();
         _watches = _watches.Clear();
         _disposeAction?.Invoke(this);
+    }
+
+    private interface IDisposableChangeTracking : IChangeTracking, IDisposable { }
+
+    private sealed class CollectionSubscription<TCollection, TItem> : IObserver<TState>, IDisposableChangeTracking
+         where TCollection : IEnumerable<TItem>, INotifyCollectionChanged
+    {
+        private static readonly IEqualityComparer<TCollection> _equalityComparer = new ChangeTrackingScopeEqualityComparer<TCollection>(ChangeTrackingScope.Instance);
+        private readonly Func<TState, TCollection> _selector;
+        private readonly Func<TItem, bool> _predicate;
+        private readonly Action<IEnumerable<TItem>>? _subscriber;
+        private readonly ChangeTrackingScope _scope;
+
+        private TCollection _value = default!;
+        private bool _changed;
+        private InnerSubscription? _innerSubscription;
+
+        public CollectionSubscription(TState state,
+            Func<TState, TCollection> selector,
+            Func<TItem, bool> predicate,
+            Action<IEnumerable<TItem>>? subscriber,
+            ChangeTrackingScope scope)
+        {
+            _selector = selector;
+            _predicate = predicate;
+            _subscriber = subscriber;
+            _scope = scope;
+
+            _value = _selector(state);
+
+            _innerSubscription = new InnerSubscription(_value, _selector, _predicate, _subscriber, _scope);
+        }
+
+        public bool IsChanged => _innerSubscription?.IsChanged ?? false;
+
+        public void AcceptChanges()
+        {
+            _innerSubscription?.AcceptChanges();
+        }
+        public void Dispose() => _innerSubscription?.Dispose();
+
+        public void OnCompleted() { }
+        public void OnError(Exception error) { }
+        public void OnNext(TState value)
+        {
+            var select = _selector(value);
+
+            if (!_equalityComparer.Equals(_value, select))
+            {
+                _value = select;
+
+                if (_innerSubscription != null)
+                {
+                    _innerSubscription.Dispose();
+                    _innerSubscription = null;
+                }
+                if (_value != null)
+                {
+                    _innerSubscription = new InnerSubscription(_value, _selector, _predicate, _subscriber, _scope);
+                }
+            }
+            else
+            {
+                _innerSubscription?.OnNext(value);
+            }
+        }
+
+        private sealed class InnerSubscription : IObserver<TState>, IChangeTracking, IDisposable
+        {
+            private readonly ChangeTrackingListQuery<TCollection, TItem> _query;
+            private readonly Action<IEnumerable<TItem>>? _subscriber;
+            private readonly ChangeTrackingScope _scope;
+            private bool _changed;
+
+            public InnerSubscription(
+                TCollection value,
+                Func<TState, TCollection> selector,
+                Func<TItem, bool> predicate,
+                Action<IEnumerable<TItem>>? subscriber,
+                ChangeTrackingScope scope)
+            {
+                _query = new ChangeTrackingListQuery<TCollection, TItem>(value, predicate);
+                _subscriber = subscriber;
+                _scope = scope;
+                _subscriber?.Invoke(_query);
+            }
+
+            public bool IsChanged => _changed;
+
+            public void OnNext(TState value)
+            {
+                _changed = _query.IsChanged;
+
+                if (!_changed)
+                    return;
+
+                bool push;
+
+                if (_scope == ChangeTrackingScope.Always)
+                {
+                    push = true;
+                }
+                else if (_scope == ChangeTrackingScope.Root)
+                {
+                    push = _query.IsBaseChanged && !_query.IsCascadingChanged;
+                }
+                else
+                {
+                    push = _query.IsChanged;
+                }
+
+                if (push)
+                {
+                    _subscriber?.Invoke(_query);
+                }
+            }
+
+            public void OnCompleted() { }
+            public void OnError(Exception error) { }
+            public void AcceptChanges()
+            {
+                if (_changed)
+                {
+                    _query.AcceptChanges();
+                    _changed = false;
+                }
+            }
+
+            public void Dispose() => _query.Dispose();
+        }
+
     }
 
     private sealed class Subscription<TValue> : IObserver<TState>, IChangeTracking
@@ -116,15 +264,9 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         }
 
         public bool IsChanged => _changed;
-
-        public void AcceptChanges()
-        {
-            _changed = false;
-        }
-
+        public void AcceptChanges() => _changed = false;
         public void OnCompleted() { }
         public void OnError(Exception error) { }
-
         public void OnNext(TState value)
         {
             if (SetValue(value))
