@@ -16,6 +16,9 @@ public sealed class ChangeTrackingScopeEqualityComparer<TValue>(ChangeTrackingSc
         if (!EqualityComparer<TValue>.Default.Equals(oldValue, newValue))
             return false;
 
+        if (changeTrackingScope == ChangeTrackingScope.Instance)
+            return true;
+
         if (newValue is IChangeTracking tracking && tracking.IsChanged)
         {
             if(changeTrackingScope == ChangeTrackingScope.Root)
