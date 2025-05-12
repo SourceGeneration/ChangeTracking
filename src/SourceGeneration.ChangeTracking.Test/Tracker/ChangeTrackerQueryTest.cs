@@ -198,7 +198,7 @@ public partial class ChangeTrackerQueryTest
         ChangeTracker<TrackingTarget> tracker = new(state);
 
         int changes = 0;
-        var disposable1 = tracker.Watch<ChangeTrackingList<TrackingObject>, TrackingObject>(x => x.ObjectList, x => x.Value > 5, scope: ChangeTrackingScope.Cascading);
+        var disposable1 = tracker.Watch(x => x.ObjectList, x => x.Value > 5, scope: ChangeTrackingScope.Cascading);
 
         tracker.OnChange(() => changes++);
 
@@ -229,7 +229,7 @@ public partial class ChangeTrackerQueryTest
         ChangeTracker<TrackingTarget> tracker = new(state);
 
         int changes = 0;
-        var disposable = tracker.Watch<ChangeTrackingList<int>, int>(x => x.List, x => x > 5);
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
 
         tracker.OnChange(() => changes++);
         state.List.Add(1);
