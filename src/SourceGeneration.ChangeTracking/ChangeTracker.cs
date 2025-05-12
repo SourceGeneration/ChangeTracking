@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -73,6 +74,20 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         var subscription = new Subscription<TValue>(State, selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
         _watches = _watches.Add(subscription);
         return new Disposable(() => _watches = _watches.Remove(subscription));
+    }
+
+    public IDisposable Watch<TItem>(Func<TState, ChangeTrackingList<TItem>> selector, Func<TItem, bool> predicate, Action<IEnumerable<TItem>>? subscriber = null, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    {
+        var subscription = new CollectionSubscription<ChangeTrackingList<TItem>, TItem>(State, selector, predicate, subscriber, scope);
+
+        _watches = _watches.Add(subscription);
+
+        return new Disposable(() =>
+        {
+            subscription.Dispose();
+            _watches = _watches.Remove(subscription);
+        });
+
     }
 
 
