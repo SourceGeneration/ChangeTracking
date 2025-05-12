@@ -105,9 +105,7 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         _disposeAction?.Invoke(this);
     }
 
-    private interface IDisposableChangeTracking : IChangeTracking, IDisposable { }
-
-    private sealed class CollectionSubscription<TCollection, TItem> : IObserver<TState>, IDisposableChangeTracking
+    private sealed class CollectionSubscription<TCollection, TItem> : IObserver<TState>, IChangeTracking, IDisposable
          where TCollection : IEnumerable<TItem>, INotifyCollectionChanged
     {
         private static readonly IEqualityComparer<TCollection> _equalityComparer = new ChangeTrackingScopeEqualityComparer<TCollection>(ChangeTrackingScope.Instance);
