@@ -69,65 +69,55 @@ internal class ChangeTrackingListQuery<TCollection, TItem> : IChangeTrackingList
     {
         if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
-            foreach (var item in e.NewItems)
-            {
-                if (item is TItem t && _predicate(t))
-                {
-                    _baseChanged = true;
-                    return;
-                }
-            }
+            _baseChanged = HasChange(e.NewItems);
         }
 
         if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
         {
-            foreach (var item in e.OldItems)
-            {
-                if (item is TItem t && _predicate(t))
-                {
-                    _baseChanged = true;
-                    return;
-                }
-            }
+            _baseChanged = HasChange(e.OldItems);
 
         }
         if (e.Action == NotifyCollectionChangedAction.Reset && e.OldItems != null)
         {
-            foreach (var item in e.OldItems)
-            {
-                if (item is TItem t && _predicate(t))
-                {
-                    _baseChanged = true;
-                    return;
-                }
-            }
+            _baseChanged = HasChange(e.OldItems);
         }
 
         if (e.Action == NotifyCollectionChangedAction.Replace)
         {
             if (e.OldItems != null)
             {
-                foreach (var item in e.OldItems)
-                {
-                    if (item is TItem t && _predicate(t))
-                    {
-                        _baseChanged = true;
-                        return;
-                    }
-                }
+                _baseChanged = HasChange(e.OldItems);
+                if (_baseChanged)
+                    return;
             }
 
             if (e.NewItems != null)
             {
-                foreach (var item in e.NewItems)
+                _baseChanged = HasChange(e.NewItems);
+            }
+        }
+
+        bool HasChange(IList changeItems)
+        {
+            foreach (var item in changeItems)
+            {
+                if (item is TItem t)
                 {
-                    if (item is TItem t && _predicate(t))
+                    if (_predicate(t))
                     {
-                        _baseChanged = true;
-                        return;
+                        return true;
+                    }
+                }
+                else if (item is IEnumerable<TItem> items)
+                {
+                    if (items.Any(_predicate))
+                    {
+                        return true;
                     }
                 }
             }
+            return false;
+
         }
     }
 
