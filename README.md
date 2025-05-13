@@ -366,9 +366,9 @@ services.AddScoped<Goods>();
 }
 ```
 
-You can use the SourceGeneration.Blazor library to simplify this process, more information see [**SourceGeneration.Blazor.Statity**](https://github.com/SourceGeneration/Blazor) repo
+You can use the SourceGeneration.Blazor library to simplify this process, more information see [**SourceGeneration.Blazor**](https://github.com/SourceGeneration/Blazor) repo
 
-[![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.Blazor.Statity.svg)](https://www.nuget.org/packages/SourceGeneration.Blazor.Statity)
+[![NuGet](https://img.shields.io/nuget/vpre/SourceGeneration.Blazor.State.svg)](https://www.nuget.org/packages/SourceGeneration.Blazor.State)
 
 ```c#
 @inherits StateComponentBase
