@@ -4,6 +4,71 @@
 public partial class ChangeTrackerQueryTest
 {
     [TestMethod]
+    public void Subscribe()
+    {
+        var state = new TrackingTarget();
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        int changes = 0;
+        var disposable = tracker.Watch(x => x.List, x => x > 5, x=>
+        {
+            changes++;
+        });
+
+        Assert.AreEqual(1, changes);
+
+        state.List.Add(1);
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
+
+        state.List.Add(6);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.List.Add(3);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.List.Add(7);
+        tracker.AcceptChanges();
+        Assert.AreEqual(3, changes);
+    }
+
+    [TestMethod]
+    public void Subscribe_Cas()
+    {
+        var state = new TrackingTarget
+        {
+            ObjectList = [],
+        };
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        int changes = 0;
+        var disposable = tracker.Watch(x => x.ObjectList, x => x.Value > 5, x =>
+        {
+            changes++;
+        });
+
+        Assert.AreEqual(1, changes);
+
+        state.ObjectList.Add(new TrackingObject{ Value = 1 });
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
+
+        state.ObjectList.Add(new TrackingObject { Value = 7 });
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.ObjectList.Add(new TrackingObject { Value = 3 });
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.ObjectList.Add(new TrackingObject { Value = 7 });
+        tracker.AcceptChanges();
+        Assert.AreEqual(3, changes);
+    }
+
+    [TestMethod]
     public void Add()
     {
         var state = new TrackingTarget();
@@ -30,6 +95,123 @@ public partial class ChangeTrackerQueryTest
         tracker.AcceptChanges();
         Assert.IsFalse(changed);
     }
+
+    [TestMethod]
+    public void Insert()
+    {
+        var state = new TrackingTarget();
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        bool changed = false;
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
+
+        tracker.OnChange(() => changed = true);
+        state.List.Insert(0, 1);
+        tracker.AcceptChanges();
+        Assert.IsFalse(changed);
+
+        state.List.Insert(0, 2);
+        tracker.AcceptChanges();
+        Assert.IsFalse(changed);
+
+        state.List.Insert(0, 6);
+        tracker.AcceptChanges();
+        Assert.IsTrue(changed);
+
+        changed = false;
+        state.List.Insert(0, 5);
+        tracker.AcceptChanges();
+        Assert.IsFalse(changed);
+    }
+
+    [TestMethod]
+    public void AddRange()
+    {
+        var state = new TrackingTarget();
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        int changes = 0;
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
+
+        tracker.OnChange(() => changes++);
+
+        state.List.AddRange([1, 2, 3]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(0, changes);
+
+        state.List.AddRange([6, 7]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
+
+        state.List.AddRange([4, 8]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.List.AddRange([4, 5]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+    }
+
+    [TestMethod]
+    public void InsertRange()
+    {
+        var state = new TrackingTarget();
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        int changes = 0;
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
+
+        tracker.OnChange(() => changes++);
+
+        state.List.InsertRange(0, [1, 2, 3]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(0, changes);
+
+        state.List.InsertRange(0, [6, 7]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
+
+        state.List.InsertRange(0, [4, 8]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.List.InsertRange(0, [4, 5]);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+    }
+
+
+    [TestMethod]
+    public void RemoveAt()
+    {
+        var state = new TrackingTarget
+        {
+            List = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        };
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        int changes = 0;
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
+
+        tracker.OnChange(() => changes++);
+
+        state.List.RemoveAt(0);
+        tracker.AcceptChanges();
+        Assert.AreEqual(0, changes);
+
+        state.List.RemoveAt(6);
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
+
+        state.List.RemoveAt(5);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+
+        state.List.RemoveAt(1);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+    }
+
 
     [TestMethod]
     public void Remove()
