@@ -10,7 +10,7 @@ public partial class ChangeTrackerQueryTest
         ChangeTracker<TrackingTarget> tracker = new(state);
 
         bool changed = false;
-        var disposable = tracker.Watch<ChangeTrackingList<int>, int>(x => x.List, x => x > 5);
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
 
         tracker.OnChange(() => changed = true);
         state.List.Add(1);
