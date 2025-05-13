@@ -49,7 +49,11 @@ States determines whether an object has been modified through two methods:
 - Checking if the object reference has changed.
 - Checking IChangeTracking.IsChanged property.
 
-## ChangeTracker
+## Tracking Changes
+
+There are two methods for state tracking:
+- ​Via ChangeTracker
+- Using State
 
 The ChangeTracker can track object changes.
 
