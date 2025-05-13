@@ -16,11 +16,11 @@ This library uses C# preview features `partial property`, Before using this libr
 ```
 
 ```powershell
-Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta4.250107.1
+Install-Package SourceGeneration.ChangeTracking -Version 1.0.0-beta5.250513.2
 ```
 
 ```powershell
-dotnet add package SourceGeneration.ChangeTracking --version 1.0.0-beta4.250107.1
+dotnet add package SourceGeneration.ChangeTracking --version 1.0.0-beta5.250513.2
 ```
 
 ## Start
@@ -31,17 +31,11 @@ States source generator will generate partial class for your state type, you jus
 [ChangeTracking]
 public partial class Goods
 {
-    public Goods()
-    {
-        Price = 1.0;
-    }
-
     public partial int Number { get; set; }
-    public partial double Price { get; set; }
+    public partial double Price { get; set; } = 1.0;
     public partial int Count { get; set; }
 }
 ```
-
 The partial class implement `INotifyPropertyChanging`, `INotifyPropertyChanged` and `IChangeTracking`
 
 ```c#
@@ -55,25 +49,47 @@ States determines whether an object has been modified through two methods:
 - Checking if the object reference has changed.
 - Checking IChangeTracking.IsChanged property.
 
+## ChangeTracker
+
+The ChangeTracker can track object changes.
+
+```c#
+[ChangeTracking]
+public partial class Goods
+{
+    public partial int Number { get; set; }
+    public partial double Price { get; set; } = 1.0;
+    public partial int Count { get; set; }
+}
+
+Goods state = new();
+var tracker = new ChangeTracker<Goods>(state);
+tracker.Watch(x => x.Price, x => Console.WriteLine($"Price has changed: {x}"));
+tracker.Watch(x => x.Count, x => Console.WriteLine($"Count has changed: {x}"));
+
+state.Count++;
+tracker.AcceptChanges(); // output: Count has changed: 1
+
+state.Price = 3.14;
+tracker.AcceptChanges(); // output: Price has changed: 3.14
+```
+
 ## State
-Based on ChangeTracking, we can build a state that subscribes to changes.
+
+State internally implements CreateTracker method to simplify tracking operations, allowing it to monitor its own state. Based on ChangeTracking, we can build a state that subscribes to changes.
+
 ```c#
 [ChangeTracking]
 public partial class Goods : State<Goods>
 {
-    public Goods()
-    {
-        Price = 1.0;
-    }
-
     public partial int Number { get; set; }
-    public partial double Price { get; set; }
+    public partial double Price { get; set; } = 1.0;
     public partial int Count { get; set; }
 }
 ```
 The State class can create a IChangeTracker.
 ```c#
-Goods state = new Goods();
+Goods state = new();
 int currentCount = 0;
 
 //Create a IChangeTracker to tracking state changes
@@ -119,7 +135,9 @@ state.AcceptChanges();
 ## Change Scope
 States support change scope, You can specify the scope of the subscribed changes.
 
-- **ChangeTrackingScope.Root** `default value`  
+- **ChangeTrackingScope.Instance**  
+  The subscription only be triggered when there are changes in instance reference of the object itself.
+- **ChangeTrackingScope.InstanceProperty** `default value`  
   The subscription only be triggered when there are changes in the properties of the object itself.
 - **ChangeTrackingScope.Cascading**  
   The subscription will be triggered when there are changes in the properties of the object itself or in the properties of its property objects.
@@ -130,12 +148,7 @@ States support change scope, You can specify the scope of the subscribed changes
 [ChangeTracking]
 public partial class Goods : State<Goods>
 {
-    public Goods()
-    {
-        Tags = [];
-    }
-
-    public partial ChangeTrackingList<SubState> Tags { get; set; }
+    public partial ChangeTrackingList<SubState> Tags { get; set; } = [];
 }
 
 [ChangeTracking]
@@ -145,14 +158,36 @@ public partial class SubState
 }
 ```
 
+
+### ChangeTrackingScope.Instance
 ```c#
 // Watch Tags with scope `ChangeTrackingScope.Root`, it's default value
 // The state will push last value when you subscribed
 // ouput: Tags count has changed 0
-var disposable = tracker.Watch(
+using var disposable = tracker.Watch(
+    selector: x => x.Tags, 
+    subscriber: x => Console.WriteLine("Tags collection instance has changed"), 
+    scope: ChangeTrackingScope.Instance);
+
+// no output, because Tags collection instance is not changed
+state.Tags.Add(new SubState { Tag = "first tag" });
+state.AcceptChanges();
+
+// output: 'Tags collection instance has changed'
+state.Tags = [];
+state.AcceptChanges();
+
+```
+
+### ChangeTrackingScope.InstanceProperty
+```c#
+// Watch Tags with scope `ChangeTrackingScope.Root`, it's default value
+// The state will push last value when you subscribed
+// ouput: Tags count has changed 0
+using var disposable = tracker.Watch(
     selector: x => x.Tags, 
     subscriber: x => Console.WriteLine($"Tags count has changed: {x.Count}"), 
-    scope: ChangeTrackingScope.Root);
+    scope: ChangeTrackingScope.InstanceProperty);
 
 // output: Tags count has changed: 1
 state.Tags.Add(new SubState { Tag = "first tag" });
@@ -162,12 +197,14 @@ state.AcceptChanges();
 state.Tags[0].Tag = "first tag has modified";
 state.AcceptChanges();
 
-disposable.Dispose();
+```
 
+### ChangeTrackingScope.Cascading
+```c#
 // Watch Tags with scope `ChangeTrackingScope.Cascading`
 // The state will push last value when you subscribed
 // ouput: Tags value has changed: first tag has modified
-tracker.Watch(
+using var disposable = tracker.Watch(
     selector: x => x.Tags,
     subscriber: x => Console.WriteLine($"Tags value has changed: {x[0].Tag}"),
     scope: ChangeTrackingScope.Cascading);
@@ -175,6 +212,33 @@ tracker.Watch(
 // ouput: Tags value has changed: first tag has modified * 2
 state.Tags[0].Tag = "first tag has modified * 2";
 state.AcceptChanges();
+```
+
+## Tracking QueryView
+
+```c#
+[ChangeTracking]
+public partial class State
+{
+    public partial ChangeTrackingList<int> List { get; set; } = [];
+}
+
+Goods state = new();
+using var tracker = new ChangeTracker(state);
+
+tracker.OnChange(()=> Console.WriteLine("Query results changed"))
+tracker.Watch(
+    selector: x => x.List, 
+    predicate: x => x > 3);
+
+// no output, the added item does not meet the condition of being greater than 5.
+state.Tags.Add(1)
+tracker.AcceptChanges();
+
+// output: 'Query results changed'
+state.Tags.Add(4)
+tracker.AcceptChanges();
+
 ```
 
 ## Merge Changes
