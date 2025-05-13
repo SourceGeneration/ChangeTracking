@@ -12,7 +12,7 @@ public class CascadingTrackingTest
         bool changed = false;
 
         var tracker = state.CreateTracker();
-        tracker.Watch(x => x, ChangeTrackingScope.Root);
+        tracker.Watch(x => x, ChangeTrackingScope.InstanceProperty);
         tracker.OnChange(() => changed = true);
 
         state.Object.Value = 1;
@@ -64,7 +64,7 @@ public class CascadingTrackingTest
         bool changed = false;
 
         var tracker = state.CreateTracker();
-        tracker.Watch(x => x.Object, ChangeTrackingScope.Root);
+        tracker.Watch(x => x.Object, ChangeTrackingScope.InstanceProperty);
         tracker.OnChange(() => changed = true);
 
         state.Object.List.Add(1);
@@ -82,7 +82,7 @@ public class CascadingTrackingTest
         bool changed = false;
 
         var tracker = state.CreateTracker();
-        tracker.Watch(x => x.Object, ChangeTrackingScope.Root);
+        tracker.Watch(x => x.Object, ChangeTrackingScope.InstanceProperty);
         tracker.OnChange(() => changed = true);
 
         state.Object.List[0] = 1;
@@ -100,7 +100,7 @@ public class CascadingTrackingTest
         bool changed = false;
 
         var tracker = state.CreateTracker();
-        tracker.Watch(x => x.Object, ChangeTrackingScope.Root);
+        tracker.Watch(x => x.Object, ChangeTrackingScope.InstanceProperty);
         tracker.OnChange(() => changed = true);
 
         state.Object.List.Remove(0);
@@ -191,7 +191,7 @@ public class CascadingTrackingTest
 
         var tracker = state.CreateTracker();
         tracker.OnChange(() => changed = true);
-        tracker.Watch(x => x.List, _ => subscribe++, ChangeTrackingScope.Root);
+        tracker.Watch(x => x.List, _ => subscribe++, ChangeTrackingScope.InstanceProperty);
 
         state.List.Add(new CascadingCollectionTestObject());
         state.AcceptChanges();

@@ -54,29 +54,29 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
         }
     }
 
-    public IDisposable Watch<TValue>(Func<TState, TValue> selector, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, ChangeTrackingScope scope = ChangeTrackingScope.InstanceProperty)
     {
         return Watch(selector, null, null, scope);
     }
 
-    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.InstanceProperty)
     {
         return Watch(selector, null, subscriber, scope);
     }
 
-    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, ChangeTrackingScope scope = ChangeTrackingScope.InstanceProperty)
     {
         return Watch(selector, predicate, null, scope);
     }
 
-    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TValue>(Func<TState, TValue> selector, Func<TValue, bool>? predicate, Action<TValue>? subscriber, ChangeTrackingScope scope = ChangeTrackingScope.InstanceProperty)
     {
         var subscription = new Subscription<TValue>(State, selector, predicate, subscriber, new ChangeTrackingScopeEqualityComparer<TValue>(scope));
         _watches = _watches.Add(subscription);
         return new Disposable(() => _watches = _watches.Remove(subscription));
     }
 
-    public IDisposable Watch<TItem>(Func<TState, ChangeTrackingList<TItem>> selector, Func<TItem, bool> predicate, Action<IEnumerable<TItem>>? subscriber = null, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TItem>(Func<TState, ChangeTrackingList<TItem>> selector, Func<TItem, bool> predicate, Action<IEnumerable<TItem>>? subscriber = null, ChangeTrackingScope scope = ChangeTrackingScope.InstanceProperty)
     {
         var subscription = new CollectionSubscription<ChangeTrackingList<TItem>, TItem>(State, selector, predicate, subscriber, scope);
 
@@ -91,7 +91,7 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
     }
 
 
-    public IDisposable Watch<TCollection, TItem>(Func<TState, TCollection> selector, Func<TItem, bool> predicate, Action<IEnumerable<TItem>>? subscriber = null, ChangeTrackingScope scope = ChangeTrackingScope.Root)
+    public IDisposable Watch<TCollection, TItem>(Func<TState, TCollection> selector, Func<TItem, bool> predicate, Action<IEnumerable<TItem>>? subscriber = null, ChangeTrackingScope scope = ChangeTrackingScope.InstanceProperty)
         where TCollection : IEnumerable<TItem>, INotifyCollectionChanged
     {
         var subscription = new CollectionSubscription<TCollection, TItem>(State, selector, predicate, subscriber, scope);
@@ -221,7 +221,7 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
                 {
                     push = true;
                 }
-                else if (_scope == ChangeTrackingScope.Root)
+                else if (_scope == ChangeTrackingScope.InstanceProperty)
                 {
                     push = _query.IsBaseChanged && !_query.IsCascadingChanged;
                 }
