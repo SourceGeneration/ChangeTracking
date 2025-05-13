@@ -1,4 +1,4 @@
-﻿namespace SourceGeneration.ChangeTracking.StateTest;
+﻿namespace SourceGeneration.ChangeTracking.TrackObjects;
 
 [TestClass]
 public partial class PropertyInitializerTest

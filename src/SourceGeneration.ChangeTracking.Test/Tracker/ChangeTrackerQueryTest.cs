@@ -219,7 +219,26 @@ public partial class ChangeTrackerQueryTest
         state.ObjectList[1].Text = "a";
         tracker.AcceptChanges();
         Assert.AreEqual(2, changes);
+    }
 
+    [TestMethod]
+    public void Init_Null()
+    {
+        var state = new TrackingTarget()
+        {
+            List = null!
+        };
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        var disposable1 = tracker.Watch(x => x.List, x => x > 5, scope: ChangeTrackingScope.Root);
+        int changes = 0;
+        tracker.OnChange(() => changes++);
+        tracker.AcceptChanges();
+        Assert.AreEqual(0, changes);
+
+        state.List = [];
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
     }
 
     [TestMethod]
@@ -240,17 +259,42 @@ public partial class ChangeTrackerQueryTest
         tracker.AcceptChanges();
         Assert.AreEqual(1, changes);
 
-        state.List = [];
-
-        state.List.Add(1);
+        state.List = [1];
         tracker.AcceptChanges();
-        Assert.AreEqual(1, changes);
+        Assert.AreEqual(2, changes);
+
+        state.List.Add(4);
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
 
         state.List.Add(8);
         tracker.AcceptChanges();
-        Assert.AreEqual(2, changes);
+        Assert.AreEqual(3, changes);
     }
 
+    [TestMethod]
+    public void ChangeInstance_null()
+    {
+        var state = new TrackingTarget();
+        ChangeTracker<TrackingTarget> tracker = new(state);
+
+        int changes = 0;
+        var disposable = tracker.Watch(x => x.List, x => x > 5);
+
+        tracker.OnChange(() => changes++);
+        state.List.Add(1);
+        tracker.AcceptChanges();
+        Assert.AreEqual(0, changes);
+
+        state.List.Add(6);
+        tracker.AcceptChanges();
+        Assert.AreEqual(1, changes);
+
+        state.List = null!;
+
+        tracker.AcceptChanges();
+        Assert.AreEqual(2, changes);
+    }
 
     public class TrackingTarget
     {

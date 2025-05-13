@@ -146,13 +146,17 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
             _value = _selector(state);
 
-            _innerSubscription = new InnerSubscription(_value, _selector, _predicate, _subscriber, _scope);
+            if (_value != null)
+            {
+                _innerSubscription = new InnerSubscription(_value, _predicate, _subscriber, _scope);
+            }
         }
 
-        public bool IsChanged => _innerSubscription?.IsChanged ?? false;
+        public bool IsChanged => _changed || (_innerSubscription?.IsChanged ?? false);
 
         public void AcceptChanges()
         {
+            _changed = false;
             _innerSubscription?.AcceptChanges();
         }
         public void Dispose() => _innerSubscription?.Dispose();
@@ -166,7 +170,7 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
             if (!_equalityComparer.Equals(_value, select))
             {
                 _value = select;
-
+                _changed = true;
                 if (_innerSubscription != null)
                 {
                     _innerSubscription.Dispose();
@@ -174,7 +178,7 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
                 }
                 if (_value != null)
                 {
-                    _innerSubscription = new InnerSubscription(_value, _selector, _predicate, _subscriber, _scope);
+                    _innerSubscription = new InnerSubscription(_value, _predicate, _subscriber, _scope);
                 }
             }
             else
@@ -192,7 +196,6 @@ public class ChangeTracker<TState> : IChangeTracker<TState> where TState : class
 
             public InnerSubscription(
                 TCollection value,
-                Func<TState, TCollection> selector,
                 Func<TItem, bool> predicate,
                 Action<IEnumerable<TItem>>? subscriber,
                 ChangeTrackingScope scope)
