@@ -51,7 +51,7 @@ States determines whether an object has been modified through two methods:
 
 ## Tracking Changes
 
-There are two methods for state tracking:
+There are two ways for state tracking:
 - ​Via ChangeTracker
 - Using State
 
